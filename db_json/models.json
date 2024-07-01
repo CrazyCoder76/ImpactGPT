@@ -1,0 +1,50 @@
+[
+  {
+    "name": "เก่งคำนวณ GPT-4 Turbo",
+    "description": "by OpenAI, 128,000 tokens context length",
+    "iconUrl": "",
+    "modelId": "gpt-4-turbo",
+    "contextSize": 2048,
+    "weight": 100,
+    "isPinned": true,
+    "isCustomModel": false,
+    "__v": 0,
+    "headers": {}
+  },
+  {
+    "name": "ทำงานเร็ว GPT-3.5 Turbo",
+    "description": "by OpenAI, 16,000 tokens context length",
+    "iconUrl": "",
+    "modelId": "gpt-3.5-turbo",
+    "contextSize": 2048,
+    "weight": 200,
+    "isPinned": true,
+    "isCustomModel": false,
+    "__v": 0,
+    "headers": {}
+  },
+  {
+    "name": "เร็วเหนือแสง Gemini 1.5 Flash",
+    "description": "by Gemini, 1,048,576 tokens context length",
+    "iconUrl": "",
+    "modelId": "models/gemini-pro",
+    "contextSize": 2048,
+    "weight": 300,
+    "isPinned": true,
+    "isCustomModel": false,
+    "__v": 0,
+    "headers": {}
+  },
+  {
+    "name": "ฉลาดวิจิตร Claude 3 Haiku",
+    "description": "by Anthropic, 200,000 tokens context length",
+    "iconUrl": "",
+    "modelId": "claude-3-haiku-20240307",
+    "contextSize": 2048,
+    "weight": 400,
+    "isPinned": true,
+    "isCustomModel": false,
+    "__v": 0,
+    "headers": {}
+  }
+]

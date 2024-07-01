@@ -1,0 +1,17 @@
+[
+  {
+    "name": "OpenAI",
+    "key": "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",
+    "placeholder": "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  {
+    "name": "Anthropic",
+    "key": "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",
+    "placeholder": "sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  {
+    "name": "Google Gemini",
+    "key": "AIzaSyDP0PU4XeMQ4jVrTkp50qQ0wR7anMKDICg",
+    "placeholder": "AIxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  }
+]
