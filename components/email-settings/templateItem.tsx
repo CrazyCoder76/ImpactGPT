@@ -43,7 +43,7 @@ const TemplateItem = ({ name, description, code, expanded, setExpanded, subject,
 
     return (
         <div className="bg-white rounded-md shadow border-gray-200 border w-full">
-            <div className="px-6 py-4 cursor-pointer flex items-center justify-between space-x-2 cursor-pointer" onClick={() => { setExpanded(!expanded) }}>
+            <div className="px-6 py-4 flex items-center justify-between space-x-2 cursor-pointer" onClick={() => { setExpanded(!expanded) }}>
                 <div>
                     <h2 className="text-xl font-semibold">
                         {name}
