@@ -1,6 +1,8 @@
 'use server'
 import connectToDatabase from '@/lib/db/mongoose'
 import EmailSettingModel from '@/models/EmailSetting'
+
+//@ts-ignore
 import nodemailer from 'nodemailer'
 import { string } from 'zod'
 import { getSmtpSettings } from './app_settings'
