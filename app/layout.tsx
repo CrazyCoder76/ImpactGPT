@@ -50,7 +50,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
           GeistMono.variable
         )}
       >
-        <Toaster position="top-center" />
+        <Toaster position="top-center" duration={3000} />
         <Providers
           attribute="class"
           defaultTheme="system"
