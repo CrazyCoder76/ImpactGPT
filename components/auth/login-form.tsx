@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 import { IconSpinner } from '../ui/icons'
 import { getMessageFromCode } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
-import { sendEmail } from '@/actions/mail'
+import { sendEasyEmail as sendEmail } from '@/actions/mail'
 
 export default function LoginForm() {
   const router = useRouter()
@@ -35,7 +35,7 @@ export default function LoginForm() {
 
   const onSendSMS = async () => {
     try {
-      await sendEmail("allenbull1234@gmail.com", "Test Sending", "This is test email using GMAIL sms provider");
+      await sendEmail({ to: "allenbull1234@gmail.com", subject: "Test Sending", body: "This is test email using GMAIL sms provider" });
     }
     catch (e) {
       console.error(e);
