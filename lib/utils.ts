@@ -70,7 +70,8 @@ export enum ResultCode {
   UserAlreadyExists = 'USER_ALREADY_EXISTS',
   UnknownError = 'UNKNOWN_ERROR',
   UserCreated = 'USER_CREATED',
-  UserLoggedIn = 'USER_LOGGED_IN'
+  UserLoggedIn = 'USER_LOGGED_IN',
+  UserDisabled = 'USER_DISABLED'
 }
 
 export const getMessageFromCode = (resultCode: string) => {
@@ -87,6 +88,8 @@ export const getMessageFromCode = (resultCode: string) => {
       return 'Something went wrong, please try again!'
     case ResultCode.UserLoggedIn:
       return 'Logged in!'
+    case ResultCode.UserDisabled:
+      return 'Your account is disabled, please contact support'
   }
 }
 
@@ -106,4 +109,10 @@ export async function* streamingFetch(input: RequestInfo | URL, init?: any) {
     }
     reader.releaseLock();
   }
+}
+
+export function removeUndefined(obj: Record<string, any>): Record<string, any> {
+  return Object.fromEntries(
+      Object.entries(obj).filter(([_, v]) => v !== undefined)
+  );
 }

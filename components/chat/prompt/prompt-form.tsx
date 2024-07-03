@@ -6,7 +6,7 @@ import { PromptLibrary } from '@/components/chat/prompt/prompt-library'
 import type { AI } from '@/lib/chat/actions'
 import { useRouter } from 'next/navigation'
 import { nanoid } from 'nanoid'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, color, motion } from 'framer-motion'
 
 import { useUIState, useAIState } from 'ai/rsc'
 
@@ -63,6 +63,7 @@ export function PromptForm({ session, id }: { session: Session, id: string }) {
   const [aiState, setAIState] = useAIState<typeof AI>();
   const [isEnterToSend, setIsEnterToSend] = useState<boolean>(true);
   const [promptLibraryOpen, setPromptLibraryOpen] = useState(false);
+  const [outputControlOpen, setOutputControlOpen] = useState(false);
 
   const { selectedAgent, currentModel, setNewChatId, input, setInput } = useStore();
   const { setOnUsePromptHandler } = usePromptPanelStore();
@@ -210,6 +211,11 @@ export function PromptForm({ session, id }: { session: Session, id: string }) {
           </div>
         ))}
       </div >
+      { outputControlOpen &&
+        <div>
+          
+        </div>
+      }
       <form
         ref={formRef}
         onSubmit={handleSubmit}
@@ -226,9 +232,13 @@ export function PromptForm({ session, id }: { session: Session, id: string }) {
                     }}>
                     <IconBook />
                   </Button>
-                  {/* <Button variant='ghost' className='shrink-0 h-auto transition-colors py-1 px-1 rounded-md relative  text-gray-500 hover:text-gray-900 dark:hover:text-zinc-200'>
+                  <Button variant='ghost' className={`shrink-0 h-auto transition-colors py-1 px-1 rounded-md relative text-gray-500 hover:text-gray-900 dark:hover:text-zinc-200 ${outputControlOpen && "text-white bg-gray-500"}`}
+                    onClick={() => {
+                      setOutputControlOpen(prev => !prev);
+                    }}
+                    >
                     <IconPen />
-                  </Button> */}
+                  </Button>
                 </div>
               </div>}
 

@@ -90,19 +90,41 @@ export interface EmailSetting {
 
 export interface User extends Record<string, any> {
   _id: string,
-  name: string;
-  email: string;
-  role: Number;
-  password?: string;
+  name: string,
+  title: string,
+  firstName: string,
+  lastName: string,
+  email: string,
+  role: Number,
+  password?: string,
+  gender: string,
+  dateOfBrith: Date,
+  company: string,
+  department: string,
+  position: string,
+  team: string,
+  rank: Number,
+  location: string,
+  employeeId: string,
+  bio: string,
+  phoneNumber: string,
+  mobileNumber: string,
+  lineId: string,
   salt?: string,
   groupId: string,
-  invited?: string
+  status?: string,
+  expireDate?: Date,
+  creditLimit: Number,
+  creditUsage: Number
 }
 
 export interface Group extends Record<string, any> {
   _id?: string,
-  name: string;
-  description: string;
+  name: string,
+  description: string,
+  expireDate: Date,
+  creditLimit: Number,
+  status: string
 }
 
 export interface ApiKey extends Record<string, any> {
