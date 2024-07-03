@@ -39,6 +39,7 @@ const sendEmail = async ({
     await transport.sendMail(msg)
     return 'success'
   } catch (e) {
+    console.error(e)
     if (e instanceof Error) return e.message
   }
 }
