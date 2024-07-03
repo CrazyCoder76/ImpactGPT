@@ -49,7 +49,15 @@ export async function authenticate(_prevState: Result | undefined, formData: For
         resultCode: ResultCode.InvalidCredentials
       }
     }
-  } catch (error) {
+  } catch (error: any) {
+
+    if (error.type === "CallbackRouteError") {
+      return {
+        type: 'error',
+        resultCode: ResultCode.UserDisabled
+      }
+    }
+    
     if (error instanceof AuthError) {
       switch (error.type) {
         case 'CredentialsSignin':

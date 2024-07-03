@@ -30,6 +30,10 @@ export const { auth, signIn, signOut } = NextAuth({
           )
           const hashedPassword = getStringFromBuffer(hashedPasswordBuffer);
           if (hashedPassword === user.password) {
+
+            if (user.status === 'disabled') {
+              throw new Error('User is disabled');
+            }
             return user;
           } else {
             return null
