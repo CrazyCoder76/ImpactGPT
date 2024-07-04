@@ -1,22 +1,22 @@
 // models/user-model.ts
 
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 // const Schema = mongoose.Schema;
 // const ObjectId = Schema.ObjectId;
 
-import { User } from '@/lib/types';
+import { User } from '@/lib/types'
 
 // export interface MongoUser extends User, mongoose.Document {}
 
 export type TUser = User & {
-  createdAt: string;
-  updatedAt: string;
-};
+  createdAt: string
+  updatedAt: string
+}
 
 const UserSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
+    required: true
   },
   title: {
     type: String
@@ -29,7 +29,7 @@ const UserSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: true,
+    required: true
   },
   role: {
     type: Number,
@@ -79,13 +79,19 @@ const UserSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: true
   },
   status: {
     type: String
   },
   salt: {
-    type: String,
+    type: String
+  },
+  otp: {
+    type: String
+  },
+  otpExpireAt: {
+    type: Date
   },
   expireDate: {
     type: Date
@@ -96,6 +102,6 @@ const UserSchema = new mongoose.Schema({
   creditUsage: {
     type: Number
   }
-});
+})
 
-export default mongoose.models.User || mongoose.model('User', UserSchema);
+export default mongoose.models.User || mongoose.model('User', UserSchema)

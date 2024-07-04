@@ -1,10 +1,7 @@
 'use server'
 import connectToDatabase from '@/lib/db/mongoose'
 import EmailSettingModel from '@/models/EmailSetting'
-
-//@ts-ignore
 import nodemailer from 'nodemailer'
-import { string } from 'zod'
 import { getSmtpSettings } from './app_settings'
 
 const sendEmail = async ({
@@ -34,8 +31,9 @@ const sendEmail = async ({
       port,
       auth: { user, pass }
     }
+    // @ts-ignore
     const transport = nodemailer.createTransport(config)
-    const msg = { from, to, subject, body }
+    const msg = { from, to, subject, text: body, replyTo: reply_to }
     await transport.sendMail(msg)
     return 'success'
   } catch (e) {
@@ -76,13 +74,11 @@ export const sendTestEmail = async ({
 }
 
 export const sendEasyEmail = async ({
-  from,
   to,
   reply_to,
   subject,
   body
 }: {
-  from?: string
   to: string
   reply_to?: string
   subject: string
@@ -96,7 +92,7 @@ export const sendEasyEmail = async ({
     port: smtpSettings.smtp_port,
     user: smtpSettings.smtp_username,
     pass: smtpSettings.smtp_password,
-    from,
+    from: smtpSettings.sender_email,
     to,
     reply_to,
     subject,
@@ -107,8 +103,16 @@ export const sendEasyEmail = async ({
 }
 
 export const sendOTPEmail = async (to: string, otp: string) => {
-  await connectToDatabase()
-  const [otpTemplate] = await EmailSettingModel.find({ name: 'Login Email Template' })
-
-  await sendEasyEmail({ to, subject: otpTemplate.subject, body: otpTemplate.body.replace('{{code}}', otp) })
+  try {
+    await connectToDatabase()
+    let otpTemplate = await EmailSettingModel.findOne({ name: 'Login Email Template' })
+    if (!otpTemplate)
+      otpTemplate = {
+        subject: 'Login to ImpactGPT',
+        body: 'OTP Code: {{code}}'
+      }
+    return await sendEasyEmail({ to, subject: otpTemplate.subject, body: otpTemplate.body.replace('{{code}}', otp) })
+  } catch (e) {
+    return 'Internal Server Error'
+  }
 }

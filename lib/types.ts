@@ -89,41 +89,43 @@ export interface EmailSetting {
 }
 
 export interface User extends Record<string, any> {
-  _id: string,
-  name: string,
-  title: string,
-  firstName: string,
-  lastName: string,
-  email: string,
-  role: Number,
-  password?: string,
-  gender: string,
-  dateOfBirth: Date,
-  company: string,
-  department: string,
-  position: string,
-  team: string,
-  rank: Number,
-  location: string,
-  employeeId: string,
-  bio: string,
-  phoneNumber: string,
-  mobileNumber: string,
-  lineId: string,
-  salt?: string,
-  groupId: string,
-  status?: string,
-  expireDate?: Date,
-  creditLimit: Number,
+  _id: string
+  name: string
+  title: string
+  firstName: string
+  lastName: string
+  email: string
+  role: Number
+  password?: string
+  gender: string
+  dateOfBirth: Date
+  company: string
+  department: string
+  position: string
+  team: string
+  rank: Number
+  location: string
+  employeeId: string
+  bio: string
+  phoneNumber: string
+  mobileNumber: string
+  lineId: string
+  salt?: string
+  groupId: string
+  status?: string
+  expireDate?: Date
+  creditLimit: Number
   creditUsage: Number
+  otp?: string
+  otpExpireAt?: Date
 }
 
 export interface Group extends Record<string, any> {
-  _id?: string,
-  name: string,
-  description: string,
-  expireDate: Date,
-  creditLimit: Number,
+  _id?: string
+  name: string
+  description: string
+  expireDate: Date
+  creditLimit: Number
   status: string
 }
 

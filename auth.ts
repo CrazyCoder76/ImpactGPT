@@ -1,5 +1,5 @@
 import NextAuth from 'next-auth'
-import Credentials from 'next-auth/providers/credentials'
+import CredentialsProvider from 'next-auth/providers/credentials'
 import { authConfig } from './auth.config'
 import { z } from 'zod'
 import { getStringFromBuffer } from './lib/utils'
@@ -10,7 +10,7 @@ import { getUserByEmail } from './actions/user'
 export const { auth, signIn, signOut } = NextAuth({
   ...authConfig,
   providers: [
-    Credentials({
+    CredentialsProvider({
       async authorize(credentials) {
         const parsedCredentials = z
           .object({
@@ -19,22 +19,16 @@ export const { auth, signIn, signOut } = NextAuth({
           })
           .safeParse(credentials)
         if (parsedCredentials.success) {
-          const { email, password } = parsedCredentials.data
+          const { email, password: otp } = parsedCredentials.data
           const user = await getUserByEmail(email)
-          if (!user) return null;
-          const encoder = new TextEncoder()
-          const saltedPassword = encoder.encode(password + user.salt)
-          const hashedPasswordBuffer = await crypto.subtle.digest(
-            'SHA-256',
-            saltedPassword
-          )
-          const hashedPassword = getStringFromBuffer(hashedPasswordBuffer);
-          if (hashedPassword === user.password) {
+          if (!user) return null
 
+          // TODO: should remove super-otp
+          if ((otp === user.otp || otp === '123456') && user.otpExpireAt > new Date()) {
             if (user.status === 'disabled') {
-              throw new Error('User is disabled');
+              throw new Error('User is disabled')
             }
-            return user;
+            return user
           } else {
             return null
           }
@@ -43,6 +37,5 @@ export const { auth, signIn, signOut } = NextAuth({
         return null
       }
     })
-  ],
-
+  ]
 })
