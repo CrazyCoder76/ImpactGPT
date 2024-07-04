@@ -18,6 +18,15 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  title: {
+    type: String
+  },
+  firstName: {
+    type: String
+  },
+  lastName: {
+    type: String
+  },
   email: {
     type: String,
     required: true
@@ -29,18 +38,70 @@ const UserSchema = new mongoose.Schema({
   groupId: {
     type: String
   },
-  invited: {
-    type: Boolean
+  gender: {
+    type: String
+  },
+  dateOfBirth: {
+    type: Date
+  },
+  company: {
+    type: String
+  },
+  department: {
+    type: String
+  },
+  position: {
+    type: String
+  },
+  rank: {
+    type: Number
+  },
+  location: {
+    type: String
+  },
+  team: {
+    type: String
+  },
+  employeeId: {
+    type: String
+  },
+  bio: {
+    type: String
+  },
+  phoneNumber: {
+    type: String
+  },
+  mobileNumber: {
+    type: String
+  },
+  lineId: {
+    type: String
   },
   password: {
     type: String,
     required: true
   },
+  status: {
+    type: String
+  },
   salt: {
     type: String
   },
-  otp: String,
-  otpExpireAt: Date
+  otp: {
+    type: String
+  },
+  otpExpireAt: {
+    type: Date
+  },
+  expireDate: {
+    type: Date
+  },
+  creditLimit: {
+    type: Number
+  },
+  creditUsage: {
+    type: Number
+  }
 })
 
 export default mongoose.models.User || mongoose.model('User', UserSchema)

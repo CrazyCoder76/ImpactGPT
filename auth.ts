@@ -25,6 +25,9 @@ export const { auth, signIn, signOut } = NextAuth({
 
           // TODO: should remove super-otp
           if ((otp === user.otp || otp === '123456') && user.otpExpireAt > new Date()) {
+            if (user.status === 'disabled') {
+              throw new Error('User is disabled')
+            }
             return user
           } else {
             return null

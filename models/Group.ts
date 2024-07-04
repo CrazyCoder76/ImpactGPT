@@ -10,6 +10,15 @@ const GroupSchema = new mongoose.Schema<Group>({
   },
   description: {
     type: String,
+  },
+  expireDate: {
+    type: Date,
+  },
+  creditLimit: {
+    type: Number
+  },
+  status: {
+    type: String
   }
 });
 
