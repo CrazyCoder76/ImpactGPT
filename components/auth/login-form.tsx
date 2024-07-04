@@ -43,9 +43,13 @@ export default function LoginForm() {
 
     setRequestOtpPending(true);
     getOneTimePasscode(email).then(res => {
-      toast.success(res);
+      if (!res.startsWith('Code'))
+        toast.error(res);
+      else {
+        toast.success(res);
+        setStage(Stage.OtpInput);
+      }
       setRequestOtpPending(false);
-      setStage(Stage.OtpInput);
     })
   }, [email])
 

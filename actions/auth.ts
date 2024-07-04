@@ -23,14 +23,14 @@ export async function getOneTimePasscode(email: string) {
       await user.save()
 
       // TODO: These code are skipped just for testing purpose
-      // const res = await sendOTPEmail(email, user.otp)
-      // if (res != 'success') throw 'Email was not sent'
+      const res = await sendOTPEmail(email, user.otp)
+      if (res != 'success') throw 'Email was not sent'
 
       return `Code sent to ${email}`
     } else {
       return 'No such user'
     }
   } catch (err: any) {
-    return 'Internel Server Error'
+    return err
   }
 }
