@@ -6,7 +6,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog'
 import React, { SetStateAction } from "react"
 import useStore from "@/lib/store"
 import { toast } from "sonner"
-import { getUserByEmail } from "@/actions/user"
+import { getUserByEmailLean } from "@/actions/user"
 
 interface InviteFormDialogProps extends DialogProps {
     setPageState: React.Dispatch<SetStateAction<number>>,
@@ -41,7 +41,7 @@ export function InviteFormDialog({ ...props }: InviteFormDialogProps) {
     const handleInviteMembers = async () => {
         try {
             for(let i = 0; i < emails.length; i++) {
-                const user = await getUserByEmail(emails[i]);
+                const user = await getUserByEmailLean(emails[i]);
                 if (!user) continue;
                 
                 inviteUser(user);
