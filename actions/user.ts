@@ -9,7 +9,7 @@ import { User } from '@/lib/types';
 export async function getUserByEmail(email: string) {
     try {
         await dbConnect();
-        const user = await UserModel.findOne({ email: email }).lean();
+        const user = await UserModel.findOne({ email: email }).lean() as User;
         return user;
     }
     catch (err: any) {
