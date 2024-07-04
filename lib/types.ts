@@ -98,7 +98,7 @@ export interface User extends Record<string, any> {
   role: Number,
   password?: string,
   gender: string,
-  dateOfBrith: Date,
+  dateOfBirth: Date,
   company: string,
   department: string,
   position: string,

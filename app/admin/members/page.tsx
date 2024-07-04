@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 //import components
 import {
@@ -14,15 +14,25 @@ import { UserFormDialog } from '@/components/admin/members/user-form-dialog';
 import { IconAdd, IconArrowLeft, IconEdit, IconRemove, IconThreeDots, IconUser, IconDisable, IconInvite, IconExport, IconImport } from "@/components/ui/icons";
 import { toast } from 'sonner'
 import { format } from 'date-fns'
+import crypto from 'crypto'
+import { v4 as uuidv4 } from 'uuid';
+import { getStringFromBuffer } from '@/lib/utils'
 
 //import types
 import { Group, User } from '@/lib/types';
 
 //import actions
-import { deleteUserById, updateUser, getAllUsers } from '@/actions/user';
+import { deleteUserById, updateUser, getAllUsers, createUser } from '@/actions/user';
 import { getGroups } from '@/actions/group';
 import { InviteFormDialog } from '@/components/admin/members/invite-form-dialog';
 import { userInfo } from 'os';
+import Papa from 'papaparse'
+
+const csv_headers = [
+    'Title', 'Firstname', 'Lastname', 'Gender', 'Date of Birth', 'Company', 'Department',
+    'Team', 'Position', 'Rank', 'Location', 'Employee ID', 'Personal Info',
+    'Email', 'Telephone Number', 'Mobile Phone Number', 'LINE ID', 'Group'
+];
 
 const Index = () => {
 
@@ -32,6 +42,9 @@ const Index = () => {
     const [pageState, setPageState] = useState(0);
     const [updateFlag, setUpdateFlag] = useState(false);
     const [userOnUpdating, setUserOnUpdating] = useState<User>();
+    const [file, setFile] = useState<File | null>(null)
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
     // current state 
     // 0: normal
     // 1: adding user
@@ -46,36 +59,39 @@ const Index = () => {
         })();
     }, [updateFlag]);
     
+    const hashPasswordBuffer = (saltedPassword: any) => {
+        const hash = crypto.createHash('sha256');
+        hash.update(saltedPassword);
+        return hash.digest();
+    };
+    
     const convertToCSV = (users: User[]): string => {
-        // Define the headers
-        const headers = [
-            'ID', 'Name', 'Email', 'Role', 'Gender', 'Date of Birth', 'Company',
-            'Department', 'Position', 'Rank', 'Location', 'Team', 'Employee ID', 'Profile',
-            'Phone Number', 'Mobile Number', 'Line ID'
-        ];
+        const group_dict: { [key: string]: string } = {};
+        groups.map(group => { group_dict[group?._id || ""] = group.name });
     
         const csvRows = users.map(user => [
-            user._id,
-            user.name,
-            user.email,
-            user.role?.toString(),
+            user.title,
+            user.firstName,
+            user.lastName,
             user.gender,
             user.dateOfBrith?.toISOString(),
             user.company,
             user.department,
+            user.team,
             user.position,
             user.rank?.toString(),
             user.location,
-            user.team,
             user.employeeId,
             user.bio,
+            user.email,
             user.phoneNumber,
             user.mobileNumber,
-            user.lineId
+            user.lineId,
+            group_dict[user.groupId]
         ]);
     
         return [
-            headers.join(','),
+            csv_headers.join(','),
             ...csvRows.map(row => row.join(','))
         ].join('\n');
     };
@@ -144,7 +160,7 @@ const Index = () => {
         }
     }
 
-    const handleDownloadCSV = () => {
+    const handleDownloadCSV = async () => {
         const csvContent = convertToCSV(users);
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
@@ -155,6 +171,88 @@ const Index = () => {
         link.click();
         document.body.removeChild(link);
     };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+          setFile(e.target.files[0])
+          handleImportCSV(e.target.files[0])
+        }
+    }
+    
+    const handleImportCSV = async (selectedFile: File) => {
+        if (!selectedFile) return
+        const reader = new FileReader()
+        reader.onload = async ({ target }) => {
+            try {
+                const csv = Papa.parse(target?.result as string, { header: true });
+                const parsedData = csv?.data;
+                
+                const group_dict: { [key: string]: string } = {};
+                groups.map(group => { group_dict[group.name] = (group._id || "") });
+
+                for(let i = 0; i < parsedData.length; i++) {
+                    const user: any = parsedData[i];
+                    const encoder = new TextEncoder();
+                    const salt = uuidv4();
+                    const saltedPassword = encoder.encode("123456" + salt);
+                    const hashedPasswordBuffer = hashPasswordBuffer(saltedPassword);
+                    const hashedPassword = getStringFromBuffer(hashedPasswordBuffer);
+                    let creditLimit: Number = 0;
+                    let expireDate: any = undefined;
+    
+                    const userGroup = groups.find(group => group.name == user[csv_headers[17]]);
+                    if (userGroup) {
+                        creditLimit = userGroup.creditLimit;
+                        expireDate = userGroup.expireDate
+                    }
+                    if (Object.keys(user).length < 16) {
+                        continue;
+                    }
+
+                    await createUser(
+                        user[csv_headers[0]],
+                        user[csv_headers[1]],
+                        user[csv_headers[2]],
+                        user[csv_headers[1]] + " " + user[csv_headers[2]],
+                        user[csv_headers[13]],
+                        user[csv_headers[3]].toLowerCase(),
+                        new Date(user[csv_headers[4]]),
+                        user[csv_headers[5]],
+                        user[csv_headers[6]],
+                        user[csv_headers[8]],
+                        parseInt(user[csv_headers[9]]),
+                        user[csv_headers[10]],
+                        user[csv_headers[7]],
+                        user[csv_headers[11]],
+                        user[csv_headers[12]],
+                        user[csv_headers[14]],
+                        user[csv_headers[15]],
+                        user[csv_headers[16]],
+                        group_dict[user[csv_headers[17]]],
+                        hashedPassword,
+                        salt,
+                        expireDate,
+                        creditLimit
+                    );
+                }
+
+                toast.success("Successfully imported users");
+            }
+            catch (error) {
+                toast.error("CSV format is incorrect!");
+            }
+            finally {
+                setUpdateFlag((flag) => !flag);
+            }
+        }
+
+        reader.readAsText(selectedFile)
+    }
+    
+    const onHandleClickImportCSV = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        fileInputRef.current?.click();
+    }
 
     return (
         <div className="min-h-[calc(100vh-64px)] bg-white px-8 py-4">
@@ -183,15 +281,22 @@ const Index = () => {
                         </button>
                     </div>
                     <div className="flex items-center justify-start gap-2">
-                        <button onClick={() => { setPageState(1); }} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-gray-400 gap-2" rel="noreferrer noopener">
+                        <button onClick={onHandleClickImportCSV} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-gray-400 gap-2" rel="noreferrer noopener">
                             <IconImport />
                             <span className="hidden md:block">Import CSV</span>
                         </button>
-                        <button onClick={() => { handleDownloadCSV(); }} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:bg-gray-400 gap-2" rel="noreferrer noopener">
+                        <button onClick={handleDownloadCSV} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:bg-gray-400 gap-2" rel="noreferrer noopener">
                             <IconExport />
                             <span className="hidden md:block">Export CSV</span>
                         </button>
                     </div>
+                    <input
+                        type="file"
+                        accept=".csv"
+                        onChange={handleFileChange}
+                        ref={fileInputRef}
+                        className='hidden'
+                    />
                 </div>
 
                 {/* Member List */}

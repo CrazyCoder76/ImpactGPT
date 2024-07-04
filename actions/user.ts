@@ -35,7 +35,7 @@ export async function createUser(
     username: string,
     email: string,
     gender: string,
-    birthday: Date,
+    birthday: Date | undefined,
     company: string | undefined,
     department: string | undefined,
     position: string | undefined,
@@ -69,7 +69,7 @@ export async function createUser(
                 name: username,
                 email,
                 gender,
-                birthday,
+                dateOfBirth: birthday,
                 company,
                 department,
                 position,
@@ -90,7 +90,7 @@ export async function createUser(
                 creditLimit,
                 creditUsage: 0
             });
-            console.log(new_user);
+            
             await new_user.save();
             return {
                 type: 'success',
@@ -122,7 +122,7 @@ export async function getAllUsers() {
                 email: user.email,
                 role: user.role,
                 gender: user.gender,
-                dateOfBrith: user.dateOfBrith,
+                dateOfBirth: user.dateOfBirth,
                 company: user.company,
                 department: user.department,
                 position: user.position,
@@ -155,7 +155,7 @@ export async function updateUser(id: string, payload: {
     name?: string,
     email?: string,
     gender?: string,
-    birthday?: Date,
+    dateOfBirth?: Date,
     company?: string,
     department?: string,
     position?: string,

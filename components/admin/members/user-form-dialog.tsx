@@ -73,7 +73,7 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
             setEmail(user.email);
             setGender(user.gender);
             setPassword('');
-            setBirthday(user.dateOfBrith);
+            setBirthday(user.dateOfBirth);
             setComapny(user.company);
             setDepartment(user.department);
             setPosition(user.position);
@@ -163,7 +163,7 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
                 let expireDate: any = undefined;
                 setIsOnRunning(true);
 
-                const userGroup = groups.find(group => group.id == groupId);
+                const userGroup = groups.find(group => group._id == groupId);
                 if (userGroup) {
                     creditLimit = userGroup.creditLimit;
                     expireDate = userGroup.expireDate
@@ -175,7 +175,7 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
                     name: firstName + " " + lastName,
                     email,
                     gender,
-                    birthday,
+                    dateOfBirth: birthday,
                     company: company || undefined,
                     department: department || undefined,
                     position: position || undefined,
