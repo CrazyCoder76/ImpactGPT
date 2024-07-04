@@ -17,6 +17,7 @@ import { Group } from '@/lib/types';
 import { GroupFormDialog } from '@/components/admin/groups/group-form-dialog';
 import { format } from 'date-fns'
 import { getGroupUsers, updateUser } from '@/actions/user';
+import { sentInviteEmail } from '@/actions/mail';
 
 const Page = () => {
 
@@ -115,13 +116,32 @@ const Page = () => {
         try {
 
             const users = await getGroupUsers(id);
+            if(!users) {
+                throw new Error("No user in this group");
+            }
 
-            console.log(users);
-            users?.map((user: any) => {
-                if (user.status != 'disabled') {
-                    updateUser(user.id, { status: 'invited' });
+            for(let i = 0; i < users?.length; i++) {
+                try {
+                    const user = users[i];
+                    const emailSentResult = await sentInviteEmail({to: user.email});
+                    if(emailSentResult === 'success') {
+                        const res = await updateUser(user.id, { status: 'invited' });
+                        if(res?.success) {
+                            setUpdateFlag((flag) => !flag);
+                            toast.success("Successfully sent invitation");  
+                        }
+                        else {
+                            toast.error(res?.message);
+                        }
+                    }
+                    else {
+                        toast.error('Invitation email was not sent')
+                    }
                 }
-            });
+                catch (err: any) {
+                    toast.error(err.message);
+                }
+            }
 
             const res = await updateGroup(id, {
                 status: 'invited'

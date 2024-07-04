@@ -116,3 +116,18 @@ export const sendOTPEmail = async (to: string, otp: string) => {
     return 'Internal Server Error'
   }
 }
+
+export const sentInviteEmail = async ({to}: {to: string}) => {
+  try {
+    await connectToDatabase()
+    let invitationTemplate = await EmailSettingModel.findOne({ name: 'Invitation Email Template' })
+    if (!invitationTemplate)
+      invitationTemplate = {
+        subject: 'You have been invited to Impact Chat',
+        body: 'Please join us on http://13.250.239.12:3000/'
+      }
+    return await sendEasyEmail({ to, subject: invitationTemplate.subject, body: invitationTemplate.body })
+  } catch (e) {
+    return 'Internal Server Error'
+  }
+}
