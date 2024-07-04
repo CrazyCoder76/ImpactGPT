@@ -33,7 +33,7 @@ const sendEmail = async ({
     }
     // @ts-ignore
     const transport = nodemailer.createTransport(config)
-    const msg = { from, to, subject, text: body, reply_to: reply_to }
+    const msg = { from, to, subject, text: body, replyTo: reply_to }
     await transport.sendMail(msg)
     return 'success'
   } catch (e) {
@@ -105,8 +105,21 @@ export const sendEasyEmail = async ({
 }
 
 export const sendOTPEmail = async (to: string, otp: string) => {
-  await connectToDatabase()
-  const [otpTemplate] = await EmailSettingModel.find({ name: 'Login Email Template' })
+  try {
+    await connectToDatabase()
+    let otpTemplate = await EmailSettingModel.findOne({ name: 'Login Email Template' })
+    console.log(otpTemplate)
 
-  return await sendEasyEmail({ to, subject: otpTemplate.subject, body: otpTemplate.body.replace('{{code}}', otp) })
+    if (!otpTemplate)
+      otpTemplate = {
+        subject: 'Login to ImpactGPT',
+        body: 'OTP Code: {{code}}'
+      }
+
+    console.log(otpTemplate)
+
+    return await sendEasyEmail({ to, subject: otpTemplate.subject, body: otpTemplate.body.replace('{{code}}', otp) })
+  } catch (e) {
+    return 'Internal Server Error'
+  }
 }
