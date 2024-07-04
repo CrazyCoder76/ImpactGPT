@@ -9,7 +9,7 @@ import { User } from '@/lib/types';
 export async function getUserByEmail(email: string) {
     try {
         await dbConnect();
-        const user = await UserModel.findOne({ email: email });
+        const user = await UserModel.findOne({ email: email }).lean();
         return user;
     }
     catch (err: any) {
@@ -21,10 +21,10 @@ export async function getGroupUsers(groupId: string) {
     try {
         await dbConnect();
         const users = await UserModel.find({ groupId: groupId });
-        return users.map((user: User) => { return { id: user._id, status: user.status } });
+        return users.map((user: User) => { return { id: user._id, email: user.email, status: user.status } });
     }
     catch (err: any) {
-        return null;
+        return [];
     }
 }
 

@@ -27,6 +27,7 @@ import { getGroups } from '@/actions/group';
 import { InviteFormDialog } from '@/components/admin/members/invite-form-dialog';
 import { userInfo } from 'os';
 import Papa from 'papaparse'
+import { sentInviteEmail } from '@/actions/mail';
 
 const csv_headers = [
     'Title', 'Firstname', 'Lastname', 'Gender', 'Date of Birth', 'Company', 'Department',
@@ -144,15 +145,21 @@ const Index = () => {
         }
     }
 
-    const inviteUser = async (userId: string) => {
+    const inviteUser = async (user: User) => {
         try {
-            const res = await updateUser(userId, { status: 'invited' });
-            if(res?.success) {
-                setUpdateFlag((flag) => !flag);
-                toast.success("Successfully sent invitation");  
+            const emailSentResult = await sentInviteEmail({to: user.email});
+            if(emailSentResult === 'success') {
+                const res = await updateUser(user._id, { status: 'invited' });
+                if(res?.success) {
+                    setUpdateFlag((flag) => !flag);
+                    toast.success("Successfully sent invitation");  
+                }
+                else {
+                    toast.error(res?.message);
+                }
             }
             else {
-                toast.error(res?.message);
+                toast.error('Invitation email was not sent')
             }
         }
         catch (err: any) {
@@ -263,7 +270,7 @@ const Index = () => {
                         pageState == 2 ?
                             <UserFormDialog open={true} user={userOnUpdating}
                                 state={pageState} setPageState={setPageState} setUpdateFlag={setUpdateFlag} /> :
-                            pageState === 3 ? <InviteFormDialog open={true} setPageState={setPageState} /> : <></>
+                            pageState === 3 ? <InviteFormDialog open={true} setPageState={setPageState} inviteUser={inviteUser} /> : <></>
                 }
                 <div className="font-semibold"><div>
                     Current members: {users && users.length}
@@ -373,7 +380,7 @@ const Index = () => {
                                                     <DropdownMenuContent>
                                                         <DropdownMenuItem className="flex-col items-start">
                                                             <button disabled={user?.role === 0 || user.status === 'disabled'} onClick={() => {
-                                                                inviteUser(user._id);
+                                                                inviteUser(user);
                                                             }} className="text-gray-700 space-x-2 flex w-full items-center justify-start px-4 py-2 text-sm whitespace-nowrap disabled:cursor-default disabled:opacity-50"
                                                             >
                                                                 <IconInvite />

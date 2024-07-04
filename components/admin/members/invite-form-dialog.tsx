@@ -5,9 +5,12 @@ import { type DialogProps } from "@radix-ui/react-alert-dialog"
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import React, { SetStateAction } from "react"
 import useStore from "@/lib/store"
+import { toast } from "sonner"
+import { getUserByEmail } from "@/actions/user"
 
 interface InviteFormDialogProps extends DialogProps {
-    setPageState: React.Dispatch<SetStateAction<number>>
+    setPageState: React.Dispatch<SetStateAction<number>>,
+    inviteUser: Function
 }
 
 const validateEmail = (email: string) => {
@@ -16,7 +19,7 @@ const validateEmail = (email: string) => {
 };
 
 export function InviteFormDialog({ ...props }: InviteFormDialogProps) {
-    const { setPageState } = props;
+    const { setPageState, inviteUser } = props;
     const { currentUser } = useStore();
     const [emails, setEmails] = React.useState<string[]>([]);
     const [error, setError] = React.useState<string>('');
@@ -35,9 +38,19 @@ export function InviteFormDialog({ ...props }: InviteFormDialogProps) {
         setEmails(lines);
     }
 
-    const handleInviteMembers = () => {
-        console.log(currentUser);
-        console.log(emails.filter(email => email))
+    const handleInviteMembers = async () => {
+        try {
+            for(let i = 0; i < emails.length; i++) {
+                const user = await getUserByEmail(emails[i]);
+                if (!user) continue;
+                
+                inviteUser(user);
+            }
+            setPageState(0);
+        }
+        catch (error) {
+            toast.error('Invitation not sent');
+        }
     }
 
     return (
