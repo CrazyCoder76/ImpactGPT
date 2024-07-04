@@ -33,7 +33,7 @@ const sendEmail = async ({
     }
     // @ts-ignore
     const transport = nodemailer.createTransport(config)
-    const msg = { from, to, subject, body }
+    const msg = { from, to, subject, text: body, reply_to: reply_to }
     await transport.sendMail(msg)
     return 'success'
   } catch (e) {
