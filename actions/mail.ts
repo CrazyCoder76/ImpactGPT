@@ -74,13 +74,11 @@ export const sendTestEmail = async ({
 }
 
 export const sendEasyEmail = async ({
-  from,
   to,
   reply_to,
   subject,
   body
 }: {
-  from?: string
   to: string
   reply_to?: string
   subject: string
@@ -94,7 +92,7 @@ export const sendEasyEmail = async ({
     port: smtpSettings.smtp_port,
     user: smtpSettings.smtp_username,
     pass: smtpSettings.smtp_password,
-    from,
+    from: smtpSettings.sender_email,
     to,
     reply_to,
     subject,
@@ -108,16 +106,11 @@ export const sendOTPEmail = async (to: string, otp: string) => {
   try {
     await connectToDatabase()
     let otpTemplate = await EmailSettingModel.findOne({ name: 'Login Email Template' })
-    console.log(otpTemplate)
-
     if (!otpTemplate)
       otpTemplate = {
         subject: 'Login to ImpactGPT',
         body: 'OTP Code: {{code}}'
       }
-
-    console.log(otpTemplate)
-
     return await sendEasyEmail({ to, subject: otpTemplate.subject, body: otpTemplate.body.replace('{{code}}', otp) })
   } catch (e) {
     return 'Internal Server Error'
