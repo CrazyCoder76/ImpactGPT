@@ -1,10 +1,7 @@
 'use server'
 import connectToDatabase from '@/lib/db/mongoose'
 import EmailSettingModel from '@/models/EmailSetting'
-
-//@ts-ignore
 import nodemailer from 'nodemailer'
-import { string } from 'zod'
 import { getSmtpSettings } from './app_settings'
 
 const sendEmail = async ({
@@ -34,6 +31,7 @@ const sendEmail = async ({
       port,
       auth: { user, pass }
     }
+    // @ts-ignore
     const transport = nodemailer.createTransport(config)
     const msg = { from, to, subject, body }
     await transport.sendMail(msg)
@@ -110,5 +108,5 @@ export const sendOTPEmail = async (to: string, otp: string) => {
   await connectToDatabase()
   const [otpTemplate] = await EmailSettingModel.find({ name: 'Login Email Template' })
 
-  await sendEasyEmail({ to, subject: otpTemplate.subject, body: otpTemplate.body.replace('{{code}}', otp) })
+  return await sendEasyEmail({ to, subject: otpTemplate.subject, body: otpTemplate.body.replace('{{code}}', otp) })
 }

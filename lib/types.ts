@@ -97,6 +97,8 @@ export interface User extends Record<string, any> {
   salt?: string
   groupId: string
   invited?: string
+  otp?: string
+  otpExpireAt?: Date
 }
 
 export interface Group extends Record<string, any> {
