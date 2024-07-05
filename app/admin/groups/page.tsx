@@ -11,10 +11,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import { toast } from 'sonner';
-import { IconAdd, IconArrowLeft, IconEdit, IconRemove, IconThreeDots, IconUser } from "@/components/ui/icons";
-import { getGroups, deleteGroup } from '@/actions/group';
+import { IconAdd, IconArrowLeft, IconDisable, IconEdit, IconInvite, IconRemove, IconThreeDots, IconUser } from "@/components/ui/icons";
+import { getGroups, deleteGroup, updateGroup } from '@/actions/group';
 import { Group } from '@/lib/types';
 import { GroupFormDialog } from '@/components/admin/groups/group-form-dialog';
+import { format } from 'date-fns'
+import { getGroupUsers, updateUser } from '@/actions/user';
+import { sentInviteEmail } from '@/actions/mail';
 
 const Page = () => {
 
@@ -32,7 +35,6 @@ const Page = () => {
         (async () => {
             try {
                 const response = await getGroups();
-                console.log(response);
                 if (response.status == 'success') {
                     setGroups(response.data);
                 }
@@ -63,6 +65,102 @@ const Page = () => {
         }
     }
 
+    const onDisableGroup = async (id: string) => {
+
+        try {
+            const users = await getGroupUsers(id);
+            users?.map((user: any) => updateUser(user.id, { status: 'disabled' }));
+
+            const res = await updateGroup(id, {
+                status: 'disabled'
+            });
+
+            if (res.status == 'success') {
+                updatePage();
+                toast.success('Successfully disabled the group!');
+            }
+            else {
+                toast.error(res.msg);
+            }
+        }
+        catch (err: any) {
+            toast.error(err.message);
+        }
+    }
+
+    const onEnableGroup = async (id: string) => {
+
+        try {
+            const users = await getGroupUsers(id);
+            users?.map((user: any) => updateUser(user.id, { status: '' }));
+
+            const res = await updateGroup(id, {
+                status: ''
+            });
+            
+            if (res.status == 'success') {
+                updatePage();
+                toast.success('Successfully enabled the group!');
+            }
+            else {
+                toast.error(res.msg);
+            }
+        }
+        catch (err: any) {
+            toast.error(err.message);
+        }
+    }
+
+    const inviteGroup = async (id: string) => {
+        
+        try {
+
+            const users = await getGroupUsers(id);
+            if(!users) {
+                throw new Error("No user in this group");
+            }
+
+            for(let i = 0; i < users?.length; i++) {
+                try {
+                    const user = users[i];
+                    const emailSentResult = await sentInviteEmail({to: user.email});
+                    if(emailSentResult === 'success') {
+                        const res = await updateUser(user.id, { status: 'invited' });
+                        if(res?.success) {
+                            setUpdateFlag((flag) => !flag);
+                            toast.success(`Invitation sent ${user.email}`);
+                        }
+                        else {
+                            toast.error(res?.message);
+                        }
+                    }
+                    else {
+                        toast.error('Invitation email was not sent')
+                    }
+                }
+                catch (err: any) {
+                    toast.error(err.message);
+                }
+            }
+
+            const res = await updateGroup(id, {
+                status: 'invited'
+            });
+
+            
+            if (res.status == 'success') {
+                updatePage();
+                toast.success('Successfully Invited the group!');
+            }
+            else {
+                toast.error(res.msg);
+            }
+        }
+        catch (err: any) {
+            toast.error(err.message);
+        }
+    }
+
     return (
         <div className="min-h-[calc(100vh-64px)] bg-white px-8 py-4">
 
@@ -86,6 +184,9 @@ const Page = () => {
                             <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Number</th>
                             <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Name</th>
                             <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Description</th>
+                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Expire Date</th>
+                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Credit Limit</th>
+                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -93,7 +194,7 @@ const Page = () => {
                         {/*  each group */}
                         {
                             groups && groups.map((group, index) => (
-                                <tr className="hover:bg-gray-50 cursor-pointer" key={group._id}>
+                                <tr className={`hover:bg-gray-50 cursor-pointer ${(group.status === 'disabled' || group.status === 'expired') && "bg-gray-300 hover:bg-gray-400"}`} key={group._id}>
                                     <td className="py-4 px-3 text-sm overflow-hidden">
                                         <div className="[&amp;>*]:m-0.5 -m-0.5">
                                             {index + 1}
@@ -113,6 +214,21 @@ const Page = () => {
                                             {group.description}
                                         </div>
                                     </td>
+                                    <td className="py-4 px-3 text-sm overflow-hidden">
+                                        <div className="[&amp;>*]:m-0.5 -m-0.5">
+                                            {group.expireDate ? format(group.expireDate, 'MMMM dd, yyyy') : ''}
+                                        </div>
+                                    </td>
+                                    <td className="py-4 px-3 text-sm overflow-hidden">
+                                        <div className="[&amp;>*]:m-0.5 -m-0.5">
+                                            {group.creditLimit?.toString()}
+                                        </div>
+                                    </td>
+                                    <td className="py-4 px-3 text-sm overflow-hidden">
+                                        <div className="[&amp;>*]:m-0.5 -m-0.5">
+                                            {group.status == 'disabled' ? "Disabled" : group.status == 'expired' ? "Expired" : group.status == 'invited' ? "Invited" : ""}
+                                        </div>
+                                    </td>
                                     <td className="py-4 px-3 text-sm text-right">
                                         <div className="relative inline-block text-left" data-headlessui-state="">
                                             <DropdownMenu>
@@ -122,6 +238,24 @@ const Page = () => {
                                                     </button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent>
+                                                    <DropdownMenuItem className="flex-col items-start">
+                                                        <button disabled={group.status === 'disabled'} onClick={() => {
+                                                            inviteGroup(group?._id || "");
+                                                        }} className="text-gray-700 space-x-2 flex w-full items-center justify-start px-4 py-2 text-sm whitespace-nowrap disabled:cursor-default disabled:opacity-50"
+                                                        >
+                                                            <IconInvite />
+                                                            <span>Invite</span>
+                                                        </button>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem className="flex-col items-start">
+                                                        <button className="text-gray-700 space-x-2 flex w-full items-center justify-start px-4 py-2 text-sm whitespace-nowrap disabled:cursor-default disabled:opacity-50"
+                                                            onClick={() => {
+                                                                group.status === 'disabled' ? group._id && onEnableGroup(group._id) : group._id && onDisableGroup(group._id);
+                                                            }}>
+                                                            <IconDisable />
+                                                            <span>{ group.status === 'disabled' ? "Enable" : "Disable" }</span>
+                                                        </button>
+                                                    </DropdownMenuItem>
                                                     <DropdownMenuItem className="flex-col items-start">
                                                         <button className="text-gray-700 space-x-2 flex w-full items-center justify-start px-4 py-2 text-sm whitespace-nowrap disabled:cursor-default disabled:opacity-50"
                                                             onClick={() => {
