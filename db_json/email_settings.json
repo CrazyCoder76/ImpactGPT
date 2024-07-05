@@ -2,13 +2,13 @@
   {
     "name": "Login Email Template",
     "subject": "Login to Impact Chat",
-    "body": "Hi there!\n\nPlease use this code to login to Impact Chat:\n\n{{code}}\n\nThis code is valid for 5 minutes.\n\nYou received this email because you requested to login to http://52.76.107.27:3000/.\n\nIf you have any questions, feel free to reply to this email.\n\nBest,\nAdmin\nhttp://52.76.107.27:3000/",
+    "body": "Hi there!\n\nPlease use this code to login to Impact Chat:\n\n{{code}}\n\nThis code is valid for 5 minutes.\n\nYou received this email because you requested to login to http://13.250.239.12:3000/.\n\nIf you have any questions, feel free to reply to this email.\n\nBest,\nAdmin\nhttp://13.250.239.12:3000/",
     "__v": 0
   },
   {
     "name": "Invitation Email Template",
     "subject": "You have been invited to Impact Chat",
-    "body": "Hi there!\n\nImpact Chat has given you access to Impact Chat. Please visit the following link to use:\n\nhttp://52.76.107.27:3000/\n\nIf you have any questions, feel free to reply to this email.\n\nBest,\nAdmin\nhttp://52.76.107.27:3000/",
+    "body": "Hi there!\n\nImpact Chat has given you access to Impact Chat. Please visit the following link to use:\n\nhttp://13.250.239.12:3000/\n\nIf you have any questions, feel free to reply to this email.\n\nBest,\nAdmin\nhttp://13.250.239.12:3000/",
     "__v": 0
   }
 ]

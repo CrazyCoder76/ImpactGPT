@@ -1,6 +1,6 @@
 "use server"
 
-import { ResultCode } from '@/lib/utils';
+import { ResultCode, removeUndefined } from '@/lib/utils';
 import dbConnect from '@/lib/db/mongoose';
 import GroupModel from '@/models/Group';
 import { Group } from '@/lib/types';
@@ -12,7 +12,11 @@ export async function findGroupByName(name: string) {
         if (group)
             return {
                 _id: group._id.toString(),
-                name: group.name
+                name: group.name,
+                description: group.description,
+                expireDate: group.expireDate,
+                creditLimit: group.creditLimit,
+                status: group.status
             };
         else return null;
     }
@@ -27,7 +31,11 @@ export async function findGroupById(id: string) {
         const group = await GroupModel.findById(id);
         return {
             _id: group._id.toString(),
-            name: group.name
+            name: group.name,
+            description: group.description,
+            expireDate: group.expireDate,
+            creditLimit: group.creditLimit,
+            status: group.status
         };
     }
     catch (err: any) {
@@ -43,7 +51,10 @@ export async function getGroups() {
         const serialized_groups: Group[] = groups.map((group) => ({
             _id: group._id.toString(),
             name: group.name,
-            description: group.description
+            description: group.description,
+            expireDate: group.expireDate,
+            creditLimit: group.creditLimit,
+            status: group.status
         }));
 
         return {
@@ -59,7 +70,7 @@ export async function getGroups() {
     }
 }
 
-export async function addNewGroup(name: string, description: string) {
+export async function addNewGroup(name: string, description: string, expireDate: Date, creditLimit: Number) {
     try {
         dbConnect();
         const existing_group = await GroupModel.findOne({ name: name });
@@ -69,7 +80,13 @@ export async function addNewGroup(name: string, description: string) {
                 msg: 'Duplicate Group Name!'
             };
         }
-        const new_group = new GroupModel({ name: name, description: description });
+        const new_group = new GroupModel({
+            name,
+            description,
+            expireDate,
+            creditLimit,
+            status: 'created'
+        });
         await new_group.save();
         return { status: 'success' };
     }
@@ -78,13 +95,20 @@ export async function addNewGroup(name: string, description: string) {
     }
 }
 
-export async function updateGroup(id: string, payload: Group) {
+export async function updateGroup(id: string, payload: {
+    name?: string,
+    description?: string,
+    expireDate?: Date,
+    creditLimit?: Number,
+    status?: string
+}) {
     try {
         dbConnect();
-        await GroupModel.findByIdAndUpdate(id, {
-            name: payload.name,
-            description: payload.description
-        });
+        
+        const cleanPayload = removeUndefined(payload);
+        await GroupModel.findByIdAndUpdate(id,
+            { $set: cleanPayload }
+        );
         return { status: 'success' };
     }
     catch (err: any) {

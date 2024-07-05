@@ -17,6 +17,11 @@ import { createUser, updateUser } from '@/actions/user'
 import crypto from 'crypto'
 import { v4 as uuidv4 } from 'uuid';
 import { getGroups } from '@/actions/group';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { toast } from 'sonner';
 // import { findGroupById, findGroupByName } from '@/actions/group'
 
 interface UserFormDialogProps extends DialogProps {
@@ -29,12 +34,26 @@ interface UserFormDialogProps extends DialogProps {
 export function UserFormDialog({ ...props }: UserFormDialogProps) {
     const { state, setPageState, user, setUpdateFlag } = props;
 
-    // const [name, setName] = useState('example');
-    // const [email, setEmail] = useState('example@gmail.com');
-    const [name, setName] = useState('');
+    const [title, setTitle] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    // const [showPassword, setShowPassword] = useState(false);
+    const [gender, setGender] = useState('male');
+    const [birthday, setBirthday] = useState<any>(new Date());
+    const [company, setComapny] = useState('');
+    const [department, setDepartment] = useState('');
+    const [position, setPosition] = useState('');
+    const [rank, setRank] = useState('');
+    const [location, setLocation] = useState('');
+    const [team, setTeam] = useState('');
+    const [employeeId, setEmployeeId] = useState('');
+    const [bio, setBio] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [mobileNumber, setMobileNumber] = useState('');
+    const [lineId, setLineId] = useState('');
+    const [expireDate, setExpireDate] = useState<any>();
+    const [creditLimit, setCreditLimit] = useState('');
 
     const [isOnRunning, setIsOnRunning] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
@@ -51,14 +70,25 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
 
     useEffect(() => {
         if (state === 2 && user) { // when upating user, init the fields
-            let initName = user.name;
-            let initEmail = user.email;
-
-            let initGroupName = user.groupName
-            setName(initName);
-            setEmail(initEmail);
+            setFirstName(user.firstName);
+            setLastName(user.lastName);
+            setTitle(user.title);
+            setEmail(user.email);
+            setGender(user.gender);
             setPassword('');
-            // setGroupName(initGroupName);
+            setBirthday(user.dateOfBirth);
+            setComapny(user.company);
+            setDepartment(user.department);
+            setPosition(user.position);
+            setRank(user.rank?.toString());
+            setLocation(user.location);
+            setTeam(user.team);
+            setEmployeeId(user.employeeId);
+            setBio(user.bio);
+            setPhoneNumber(user.phoneNumber);
+            setMobileNumber(user.mobileNumber);
+            setLineId(user.lineId);
+            setGroupId(user.groupId);
         }
 
         // Get Groups
@@ -75,11 +105,11 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
     const onClick = async () => {
         const parsedInfo = z
             .object({
-                name: z.string().min(1),
+                firstName: z.string().min(1),
                 email: z.string().email(),
                 password: state == 1 ? z.string().min(6) : z.string().min(0)
             })
-            .safeParse({ name, email, password });
+            .safeParse({ firstName, email, password });
         if (!parsedInfo.success) {
             setErrorMsg('Invalid Information!');
             return;
@@ -90,21 +120,88 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
                 const salt = uuidv4()
                 const saltedPassword = encoder.encode(password + salt)
                 const hashedPasswordBuffer = hashPasswordBuffer(saltedPassword);
-                const hashedPassword = getStringFromBuffer(hashedPasswordBuffer)
+                const hashedPassword = getStringFromBuffer(hashedPasswordBuffer);
+                let credit: any;
+                let expire: any;
                 setIsOnRunning(true);
-                const result = await createUser(name, email, groupId, hashedPassword, salt);
+
+                const userGroup = groups.find(group => group._id == groupId);
+                if (userGroup) {
+                    credit = userGroup.creditLimit;
+                    expire = userGroup.expireDate
+                }
+                credit = parseInt(creditLimit) || credit;
+                expire = expireDate || expire;
+
+                const result = await createUser(
+                    title,
+                    firstName,
+                    lastName,
+                    firstName + " " + lastName,
+                    email,
+                    gender,
+                    birthday,
+                    company || undefined,
+                    department || undefined,
+                    position || undefined,
+                    parseInt(rank) || undefined,
+                    location || undefined,
+                    team || undefined,
+                    employeeId || undefined,
+                    bio || undefined,
+                    phoneNumber || undefined,
+                    mobileNumber || undefined,
+                    lineId || undefined,
+                    groupId,
+                    hashedPassword,
+                    salt,
+                    expire,
+                    credit
+                );
+
                 if (result.resultCode !== ResultCode.UserCreated) throw new Error();
                 setUpdateFlag((flag: any) => !flag);
                 setPageState(0);
+
+                toast.success('Successfully created the user');
             }
             else if (state == 2) { //update a user
                 if (!user) return;
+                let credit: any;
+                let expire: any;
                 setIsOnRunning(true);
+
+                const userGroup = groups.find(group => group._id == groupId);
+                if (userGroup) {
+                    credit = userGroup.creditLimit;
+                    expire = userGroup.expireDate
+                }
+                credit = parseInt(creditLimit) || credit;
+                expire = expireDate || expire;
+
                 const res = await updateUser(user._id, {
-                    name: name,
-                    email: email,
-                    password: password,
-                    groupId: groupId
+                    title,
+                    firstName,
+                    lastName,
+                    name: firstName + " " + lastName,
+                    email,
+                    gender,
+                    dateOfBirth: birthday,
+                    company: company || undefined,
+                    department: department || undefined,
+                    position: position || undefined,
+                    rank: parseInt(rank) || undefined,
+                    location: location || undefined,
+                    team: team || undefined,
+                    employeeId: employeeId || undefined,
+                    bio: bio || undefined,
+                    phoneNumber: phoneNumber || undefined,
+                    mobileNumber: mobileNumber || undefined,
+                    lineId: lineId || undefined,
+                    groupId: groupId,
+                    password,
+                    expireDate: expire,
+                    creditLimit: credit
                 });
                 if (!res.success) {
                     setErrorMsg('Failed!');
@@ -112,7 +209,9 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
                 setIsOnRunning(false);
                 setUpdateFlag((flag: any) => !flag);
                 setPageState(0);
-            }
+
+                toast.success('Successfully updated the user');
+            }   
         }
         catch (err: any) {
             setIsOnRunning(false);
@@ -120,8 +219,8 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
         }
     }
     return (
-        <>{isExistGroups && <Dialog {...props}>
-            <DialogContent style={{ width: '400px' }}>
+        <>{isExistGroups && <Dialog {...props} onOpenChange={() => setPageState(0)}>
+            <DialogContent style={{ minWidth: '400px', maxHeight: '500px', overflow: 'auto' }}>
                 <div className='text-gray-800 dark:text-white text-left text-sm'>
                     <div>
                         <h2 data-element-id="prompt-library-modal-title" className="text-center text-2xl font-bold text-gray-800 dark:text-white">
@@ -130,9 +229,23 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
 
                         <div className='mt-4'>
                             <div className='-mt-2 mb-4'>
-                                <span>Name: </span>
-                                <input type="text" placeholder="Enter user name" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
-                                    value={name} onChange={(e) => { setName(e.currentTarget.value) }} />
+                                <div className='w-full flex gap-4'>
+                                    <div className='w-[150px]'>
+                                        <span>Title: </span>
+                                        <input type="text" placeholder="Enter title" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
+                                            value={title} onChange={(e) => { setTitle(e.currentTarget.value) }} />
+                                    </div>
+                                    <div className='grow'>
+                                        <span>First Name: </span>
+                                        <input type="text" placeholder="Enter first name" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
+                                            value={firstName} onChange={(e) => { setFirstName(e.currentTarget.value) }} />
+                                    </div>
+                                    <div className='grow'>
+                                        <span>Last Name: </span>
+                                        <input type="text" placeholder="Enter last name" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
+                                            value={lastName} onChange={(e) => { setLastName(e.currentTarget.value) }} />
+                                    </div>
+                                </div>
                             </div>
                             <div className='-mt-2 mb-4'>
                                 <span>Email: </span>
@@ -153,6 +266,101 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
                                     {showPassword ? 'Hide' : 'Show'}
                                 </span>
                             </div> */}
+                            </div>
+                            <div className='-mt-2 mb-4'>
+                                <span>Gender: </span>
+                                <div className='flex gap-4 py-1'>
+                                    <div
+                                        className='flex items-center gap-1'
+                                        onClick={() => setGender('male')}
+                                    >
+                                        <Input type="radio" name={"genderRadioGroup"} checked={gender == 'male'} readOnly/>
+                                        <label>Male</label>
+                                    </div>
+                                    <div
+                                        className='flex items-center gap-1 hover:cursor-pointer'
+                                        onClick={() => setGender('female')}
+                                    >
+                                        <Input type="radio" name={"genderRadioGroup"} checked={gender == 'female'} readOnly/>
+                                        <label>Female</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className='-mt-2 mb-4'>
+                                <span>Brithday:<br/></span>
+                                <DatePicker
+                                    className='border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800'
+                                    selected={birthday}
+                                    onChange={(date) => setBirthday(date)}
+                                />
+                            </div>
+                            <div className='-mt-2 mb-4'>
+                                <span>Company: </span>
+                                <input type="text" placeholder="Enter company" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
+                                    value={company} onChange={(e) => { setComapny(e.currentTarget.value); }} />
+                            </div>
+                            <div className='-mt-2 mb-4'>
+                                <span>Department: </span>
+                                <input type="text" placeholder="Enter department" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
+                                    value={department} onChange={(e) => { setDepartment(e.currentTarget.value); }} />
+                            </div>
+                            <div className='-mt-2 mb-4'>
+                                <span>Position: </span>
+                                <input type="text" placeholder="Enter company" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
+                                    value={position} onChange={(e) => { setPosition(e.currentTarget.value); }} />
+                            </div>
+                            <div className='-mt-2 mb-4'>
+                                <span>Rank: </span>
+                                <input type="text" placeholder="Enter rank" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
+                                    value={rank} onChange={(e) => { setRank(e.currentTarget.value); }} />
+                            </div>
+                            <div className='-mt-2 mb-4'>
+                                <span>Location: </span>
+                                <input type="text" placeholder="Enter location" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
+                                    value={location} onChange={(e) => { setLocation(e.currentTarget.value); }} />
+                            </div>
+                            <div className='-mt-2 mb-4'>
+                                <span>Team: </span>
+                                <input type="text" placeholder="Enter team" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
+                                    value={team} onChange={(e) => { setTeam(e.currentTarget.value); }} />
+                            </div>
+                            <div className='-mt-2 mb-4'>
+                                <span>Employee Id: </span>
+                                <input type="text" placeholder="Enter employee id" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
+                                    value={employeeId} onChange={(e) => { setEmployeeId(e.currentTarget.value); }} />
+                            </div>
+                            <div className='-mt-2 mb-4'>
+                                <span>Personal Info: </span>
+                                <Textarea placeholder="Enter personal info" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
+                                    value={bio} onChange={(e) => { setBio(e.currentTarget.value); }} />
+                            </div>
+                            <div className='-mt-2 mb-4'>
+                                <span>Telephone Number: </span>
+                                <input type="text" placeholder="Enter telephone number" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
+                                    value={phoneNumber} onChange={(e) => { setPhoneNumber(e.currentTarget.value); }} />
+                            </div>
+                            <div className='-mt-2 mb-4'>
+                                <span>Mobile Phone Number: </span>
+                                <input type="text" placeholder="Enter mobile phone number" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
+                                    value={mobileNumber} onChange={(e) => { setMobileNumber(e.currentTarget.value); }} />
+                            </div>
+                            <div className='-mt-2 mb-4'>
+                                <span>Line ID: </span>
+                                <input type="text" placeholder="Enter line id" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
+                                    value={lineId} onChange={(e) => { setLineId(e.currentTarget.value); }} />
+                            </div>
+                            <div className='-mt-2 mb-4'>
+                                <span>Expire Date:<br/></span>
+                                <DatePicker
+                                    className='border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800'
+                                    selected={expireDate}
+                                    onChange={(date) => setExpireDate(date)}
+                                />
+                            </div>
+                            <div className='-mt-2 mb-4'>
+                                <span>Monthly Credit: </span>
+                                <input type="text" placeholder="Enter credit limit" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
+                                    value={creditLimit} onChange={(e) => { setCreditLimit(e.currentTarget.value) }} />
                             </div>
                             <div className='-mt-2 mb-4 flex items-center gap-6'>
                                 <span>Group: </span>

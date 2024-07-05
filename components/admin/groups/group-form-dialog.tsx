@@ -12,6 +12,8 @@ import { toast } from 'sonner'
 import { IconMark, IconSpinner } from '@/components/ui/icons';
 import { Group } from '@/lib/types';
 import { addNewGroup, updateGroup } from '@/actions/group';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 interface GroupFormDialogProps extends DialogProps {
     state: number,
@@ -26,16 +28,22 @@ export function GroupFormDialog({ ...props }: GroupFormDialogProps) {
     const [description, setDescription] = useState('');
     const [errMsg, setErrMsg] = useState('');
     const [isPending, setIsPending] = useState(false);
+    const [expireDate, setExpireDate] = useState<any>(new Date());
+    const [creditLimit, setCreditLimit] = useState('');
 
     useEffect(() => {
         if (state == 1) {
             setName('');
             setDescription('');
+            setCreditLimit('');
+            setExpireDate(new Date());
         }
         else if (state == 2) {
             if (group) {
                 setName(group.name);
                 setDescription(group.description);
+                setExpireDate(group.expireDate);
+                setCreditLimit(group.creditLimit?.toString());
             }
         }
         setErrMsg('');
@@ -63,7 +71,7 @@ export function GroupFormDialog({ ...props }: GroupFormDialogProps) {
                     return;
                 }
                 setIsPending(true);
-                const res = await addNewGroup(name, description);
+                const res = await addNewGroup(name, description, expireDate, parseInt(creditLimit));
                 if (res.status == 'success') {
                     {/* @ts-ignore */ }
                     onOpenChange(false);
@@ -85,7 +93,9 @@ export function GroupFormDialog({ ...props }: GroupFormDialogProps) {
                 if (group) {
                     const res = await updateGroup(group._id || '', {
                         name: name,
-                        description: description
+                        description: description,
+                        expireDate: expireDate,
+                        creditLimit: parseInt(creditLimit)
                     });
                     if (res.status == 'success') {
                         {/* @ts-ignore */ }
@@ -126,6 +136,19 @@ export function GroupFormDialog({ ...props }: GroupFormDialogProps) {
                                 <span>Description: </span>
                                 <textarea placeholder="Type Description" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
                                     value={description} onChange={(e) => { setDescription(e.currentTarget.value); }} />
+                            </div>
+                            <div className='-mt-2 mb-4'>
+                                <span>Expire Date:<br/></span>
+                                <DatePicker
+                                    className='border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800'
+                                    selected={expireDate}
+                                    onChange={(date) => setExpireDate(date)}
+                                />
+                            </div>
+                            <div className='-mt-2 mb-4'>
+                                <span>Monthly Credit: </span>
+                                <input type="text" placeholder="Enter credit limit" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
+                                    value={creditLimit} onChange={(e) => { setCreditLimit(e.currentTarget.value) }} />
                             </div>
                         </div>
 
