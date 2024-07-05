@@ -1,9 +1,14 @@
-import { streamText } from 'ai';
+import { streamText, generateText } from 'ai';
 import OpenAI from 'openai';
 
 import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createAzure } from '@ai-sdk/azure';
+import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
+import { createVertex } from '@ai-sdk/google-vertex';
+import { GoogleAuth } from 'google-auth-library';
+import { v4 as uuidv4 } from 'uuid';
 
 import Agent from '@/models/Agent';
 import { getApiKeyByModelId } from '@/actions/api_key';
@@ -31,6 +36,7 @@ export async function POST(req: Request) {
       res = await getApiKeyByModelId(modelId);
       const apiKey = res?.key || '';
 
+      console.log(modelId);
       switch (modelId) {
         case 'gpt-4-turbo':
           model = createOpenAI({ apiKey })('gpt-4-turbo');
@@ -62,35 +68,104 @@ export async function POST(req: Request) {
       return new Response(stream)
     }
     else {
+      // Custom Model
+
+      // Get Custom headers
       const headers: { [key: string]: string } = {};
-      console.log(messages);
-      console.log(modelInfo?.endpoint, modelInfo?.modelId, modelInfo?.headers);
-      if (modelInfo?.headers) {
+      // console.log(messages);
+      // console.log(modelInfo?.endpoint, modelInfo?.modelId, modelInfo?.headers);
+      if (modelInfo?.headers && modelInfo.headers instanceof Map) {
         modelInfo.headers.forEach((value: string, key: string) => {
           headers[key] = value;
         });
       }
-      const openai = new OpenAI({
-        baseURL: modelInfo?.endpoint || '',
-        apiKey: '',
-        defaultHeaders: headers
-      })
 
-      const stream = await openai.chat.completions.create({
-        model: modelInfo?.modelId || '',
-        messages: [
-          {
-            role: 'system',
-            content: system
-          },
-          ...messages],
-        stream: true,
-      }, {
-        timeout: 4000
-      })
-      const iterator = makeIterator2(stream);
-      return new Response(iteratorToStream(iterator));
+      let model;
+      if (modelInfo?.modelType == 'openai compatible') {
+        let endpoint = '';
+        if (modelInfo?.endpoint) {
+          endpoint = modelInfo.endpoint.replace('/chat/completions', '');
+        }
+        const openai = new OpenAI({
+          baseURL: endpoint,
+          defaultHeaders: headers
+        })
 
+        const stream = await openai.chat.completions.create({
+          model: modelInfo?.modelId || '',
+          messages: [
+            {
+              role: 'system',
+              content: system
+            },
+            ...messages],
+          stream: true,
+        }, {
+          timeout: 4000
+        })
+        const iterator = makeIterator2(stream);
+        return new Response(iteratorToStream(iterator));
+      }
+      if (modelInfo?.modelType === 'azure openai') {
+        // Azure OpenAI
+        const regex = /https:\/\/(.+?)\.openai\.azure\.com\/openai\/deployments\/(.+?)\/chat\/completions\?api-version=\d{4}-\d{2}-\d{2}-preview/;
+        const match = (modelInfo.endpoint || '').match(regex);
+        if (!match) throw new Error('Endpoint format is not incorrect');
+        const resourceName = match[1];
+        const deploymentName = match[2];
+
+        const apiKey = headers['api-key'] || '';
+
+        const azure = createAzure({
+          resourceName: resourceName, // Azure resource name
+          apiKey: apiKey,
+        });
+        model = azure(deploymentName);
+      }
+      else if (modelInfo?.modelType === 'amazon bedrock') {
+        // AWS Bedrock
+        const region = headers['region'] || '';
+        const accessKeyId = headers['access-key-id'] || '';
+        const secretAccessKey = headers['secret-access-key'] || '';
+
+        const bedrock = createAmazonBedrock({
+          region: region,
+          accessKeyId: accessKeyId,
+          secretAccessKey: secretAccessKey,
+        });
+        model = bedrock(modelId);
+
+      }
+      else if (modelInfo?.modelType === 'google vertex') {
+        // Google Vertex
+        const projectId = headers['project-id'] || '';
+        const locationId = headers['location-id'] || '';
+
+        const auth = new GoogleAuth({
+          keyFilename: `././db_json/${headers['key-file-name']}`
+        });
+        const vertex = createVertex({
+          project: projectId, // optional
+          location: locationId, // optional
+          googleAuthOptions: auth
+        });
+
+        model = vertex(modelId);
+      }
+
+      if (!model) throw new Error('model not found!');
+
+      const result = await streamText({
+        model: model,
+        maxTokens: modelInfo?.contextSize,
+        system: system,
+        messages: messages
+      });
+      const iterator = makeIterator(result.textStream);
+
+      const stream = iteratorToStream(iterator);
+
+      return new Response(stream)
     }
   }
   catch (err: any) {

@@ -12,6 +12,7 @@ import { GPTModel } from '@/lib/types'
 type AddingModelType = {
   id: string,
   name: string,
+  modelType: string,
   iconUrl: string,
   description: string,
   endPoint: string,
@@ -37,6 +38,7 @@ type ModelHeaderFieldProps = {
 const initialModel: AddingModelType = {
   id: '',
   name: '',
+  modelType: '',
   iconUrl: '',
   description: '',
   endPoint: '',
@@ -61,7 +63,6 @@ export function AddingModel({ backToMain, selectedModel }: React.ComponentProps<
 
   const onTestModel = async () => {
     try {
-      if (model.endPoint.length == 0) return;
       setIsTesting(true);
       const headers: { [key: string]: string } = {};
       if (model.headers) {
@@ -69,7 +70,7 @@ export function AddingModel({ backToMain, selectedModel }: React.ComponentProps<
           headers[header.key] = header.value;
         }
       }
-      const res = await testModel(model.endPoint, model.modelId, headers);
+      const res = await testModel(model.endPoint, model.modelId, headers, model.modelType);
       setIsTesting(false);
       if (res.status == 'success') {
         setIsAddButtonActive(true);
@@ -111,7 +112,7 @@ export function AddingModel({ backToMain, selectedModel }: React.ComponentProps<
   }
 
   const handleAdd = async () => {
-    if (model?.name.trim() === '' || model?.modelId.trim() === '' || model?.contextLength <= 0) {
+    if (model?.name.trim() === '' || model?.contextLength <= 0) {
       setModel({ ...model, error: true, pending: false })
     }
     else {
@@ -127,15 +128,19 @@ export function AddingModel({ backToMain, selectedModel }: React.ComponentProps<
           name: model.name,
           iconUrl: model.iconUrl,
           description: model.description,
-          endPoint: model.endPoint,
+          endpoint: model.endPoint,
           modelId: model.modelId,
-          contextLength: model.contextLength,
+          contextSize: model.contextLength,
           headers: headers,
-          error: false,
+          modelType: model.modelType,
+          isCustomModel: true
         });
         if (res?.status === 200) {
           setModel({ ...model, error: false, pending: false })
           window.location.reload();
+        }
+        else {
+          setModel({ ...model, error: false, pending: false })
         }
       }
       else {
@@ -154,11 +159,15 @@ export function AddingModel({ backToMain, selectedModel }: React.ComponentProps<
           modelId: model.modelId,
           contextLength: model.contextLength,
           headers: headers,
+          modelType: model.modelType,
           error: false,
         });
         if (res?.status === 200) {
           setModel({ ...model, error: false, pending: false })
           window.location.reload()
+        }
+        else {
+          setModel({ ...model, error: false, pending: false })
         }
       }
     }
@@ -183,17 +192,35 @@ export function AddingModel({ backToMain, selectedModel }: React.ComponentProps<
     <div className='mt-6 [&>*]:bg-white'>
       <div className='bg-gray-100 dark:bg-gray-900 dark:border-gray-600 rounded-md shadow border-gray-200 border p-4 space-y-4'>
         <div className='p-3 dark:bg-gray-800 rounded-lg space-y-3 !mt-4 text-base md:p-4'>
-          <div>
-            <div className='flex items-center justify-between mb-1'>
-              <label className='block font-medium leading-6'>Name</label>
+          <div className='flex gap-2'>
+            <div className='w-full'>
+              <div className='flex items-center justify-between mb-1'>
+                <label className='block font-medium leading-6'>Name</label>
+              </div>
+              <Input
+                name='name'
+                value={model.name}
+                placeholder='e.g., GPT4All'
+                onChange={onModelChange}
+                className='text-sm w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-zinc-700 bg-white text-black'
+              />
             </div>
-            <Input
-              name='name'
-              value={model.name}
-              placeholder='e.g., GPT4All'
-              onChange={onModelChange}
-              className='text-sm w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-zinc-700 bg-white text-black'
-            />
+            <div>
+              <div className='flex items-center justify-between mb-1'>
+                <label className='block font-medium leading-6'>Model Type</label>
+              </div>
+              <select
+                value={model.modelType}
+                defaultValue='openai compatible'
+                onChange={(e) => { setModel({ ...model, modelType: e.target.value }); }}
+                className="block w-fit rounded-md border-0 py-2 pl-3 pr-10 text-gray-900 dark:text-white dark:bg-zinc-700 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-blue-600 sm:text-sm sm:leading-6"
+              >
+                <option value='openai compatible'>OpenAI Compatible</option>
+                <option value='amazon bedrock'>Amazon Bedrock</option>
+                <option value='google vertex'>Google Vertex</option>
+                <option value='azure openai'>Azure OpenAI</option>
+              </select>
+            </div>
           </div>
           <div>
             <div className='flex items-center justify-between mb-1'>
@@ -222,12 +249,12 @@ export function AddingModel({ backToMain, selectedModel }: React.ComponentProps<
           <div>
             <div className='flex items-center justify-between mb-1'>
               <label className='block font-medium leading-6'>Endpoint</label>
-              <div className='text-xs text-right'>* Must be compatible with /v1/</div>
+              <div className='text-xs text-right'>* Must be compatible with /v1/chat/completions</div>
             </div>
             <Input
               name='endPoint'
               value={model.endPoint}
-              placeholder='http://localhost:8080/v1/'
+              placeholder='http://localhost:8080/v1/chat/completions'
               onChange={onModelChange}
               className='text-sm w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-zinc-700 bg-white text-black'
             />
@@ -326,18 +353,19 @@ const ModelHeaderField: React.FC<ModelHeaderFieldProps> = ({ header, index, hand
   };
 
   return (
-    <div className='flex items-center justify-center gap-2'>
-      <Input
-        value={key}
-        onChange={handleKeyChange}
-        className='w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white text-black' />
-      <Input
-        value={value}
-        onChange={handleValueChange}
-        className='w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white text-black' />
-      <Button className='text-red-500 font-semibold hover:underline' onClick={removeHeader}>
-        Remove
-      </Button>
-    </div>
+    key === 'key-file-name' ? <></> :
+      <div className='flex items-center justify-center gap-2'>
+        <Input
+          value={key}
+          onChange={handleKeyChange}
+          className='w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white text-black' />
+        <Input
+          value={value}
+          onChange={handleValueChange}
+          className='w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white text-black' />
+        <Button className='text-red-500 font-semibold hover:underline' onClick={removeHeader}>
+          Remove
+        </Button>
+      </div>
   );
 };

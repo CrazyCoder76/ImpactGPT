@@ -47,7 +47,7 @@ export default function IndexPage() {
             <h2 className='text-xl font-semibold'>Models</h2>
             <Button variant='default' className='text-blue-500 hover:underline inline-flex justify-center items-center font-semibold space-x-1 shrink-0 truncate px-2'>
               <IconPlus />
-              <span onClick={() => setIsModelAdding(true)}>Add Custom Model</span>
+              <span onClick={() => { setIsModelAdding(true); setSelectedModel(null); }}>Add Custom Model</span>
             </Button>
           </div>
           <div className='flex items-center space-x-1'>

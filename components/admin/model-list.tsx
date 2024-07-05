@@ -147,7 +147,7 @@ export function ModelList({ setIsModelAdding, setSelectedModel }: React.Componen
                                 </button>
                               </DropdownMenuItem>
                               <DropdownMenuItem className="flex-col items-start">
-                                <button onClick={() => { handleDeleteModel(model?.id) }} className="text-gray-700 space-x-2 flex w-full items-center justify-start px-3 py-2 text-sm whitespace-nowrap disabled:cursor-default disabled:opacity-50">
+                                <button onClick={() => { handleDeleteModel(model?.id || '') }} className="text-gray-700 space-x-2 flex w-full items-center justify-start px-3 py-2 text-sm whitespace-nowrap disabled:cursor-default disabled:opacity-50">
                                   <IconRemove />
                                   <span>Remove</span>
                                 </button>

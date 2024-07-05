@@ -38,7 +38,11 @@ const ModelSchema = new mongoose.Schema({
     type: Boolean,
     required: true,
     default: false
-  }
+  },
+  modelType: {
+    type: String,
+    required: false
+  },
 })
 
 export default mongoose.models.Model || mongoose.model<GPTModel>('Model', ModelSchema);

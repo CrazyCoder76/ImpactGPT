@@ -63,16 +63,18 @@ export interface Agent {
 }
 
 export interface GPTModel {
-  id: string,
+  id?: string,
   name: string,
   description: string,
   iconUrl: string,
   weight?: number,
   isPinned?: boolean,
+  contextSize?: number,
   isCustomModel?: boolean,
   modelId?: string,
   endpoint?: string,
-  headers?: Map<string, string>
+  headers?: Map<string, string> | { [key: string]: string }
+  modelType?: string
 }
 
 export interface Usage {
