@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { toast } from 'sonner';
 // import { findGroupById, findGroupByName } from '@/actions/group'
 
 interface UserFormDialogProps extends DialogProps {
@@ -51,6 +52,8 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
     const [phoneNumber, setPhoneNumber] = useState('');
     const [mobileNumber, setMobileNumber] = useState('');
     const [lineId, setLineId] = useState('');
+    const [expireDate, setExpireDate] = useState<any>();
+    const [creditLimit, setCreditLimit] = useState('');
 
     const [isOnRunning, setIsOnRunning] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
@@ -85,6 +88,7 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
             setPhoneNumber(user.phoneNumber);
             setMobileNumber(user.mobileNumber);
             setLineId(user.lineId);
+            setGroupId(user.groupId);
         }
 
         // Get Groups
@@ -117,15 +121,17 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
                 const saltedPassword = encoder.encode(password + salt)
                 const hashedPasswordBuffer = hashPasswordBuffer(saltedPassword);
                 const hashedPassword = getStringFromBuffer(hashedPasswordBuffer);
-                let creditLimit: Number = 0;
-                let expireDate: any = undefined;
+                let credit: any;
+                let expire: any;
                 setIsOnRunning(true);
 
                 const userGroup = groups.find(group => group._id == groupId);
                 if (userGroup) {
-                    creditLimit = userGroup.creditLimit;
-                    expireDate = userGroup.expireDate
+                    credit = userGroup.creditLimit;
+                    expire = userGroup.expireDate
                 }
+                credit = parseInt(creditLimit) || credit;
+                expire = expireDate || expire;
 
                 const result = await createUser(
                     title,
@@ -149,25 +155,30 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
                     groupId,
                     hashedPassword,
                     salt,
-                    expireDate || undefined,
-                    creditLimit
+                    expire,
+                    credit
                 );
 
                 if (result.resultCode !== ResultCode.UserCreated) throw new Error();
                 setUpdateFlag((flag: any) => !flag);
                 setPageState(0);
+
+                toast.success('Successfully created the user');
             }
             else if (state == 2) { //update a user
                 if (!user) return;
-                let creditLimit: Number = 0;
-                let expireDate: any = undefined;
+                let credit: any;
+                let expire: any;
                 setIsOnRunning(true);
 
                 const userGroup = groups.find(group => group._id == groupId);
                 if (userGroup) {
-                    creditLimit = userGroup.creditLimit;
-                    expireDate = userGroup.expireDate
+                    credit = userGroup.creditLimit;
+                    expire = userGroup.expireDate
                 }
+                credit = parseInt(creditLimit) || credit;
+                expire = expireDate || expire;
+
                 const res = await updateUser(user._id, {
                     title,
                     firstName,
@@ -189,8 +200,8 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
                     lineId: lineId || undefined,
                     groupId: groupId,
                     password,
-                    expireDate: expireDate || undefined,
-                    creditLimit
+                    expireDate: expire,
+                    creditLimit: credit
                 });
                 if (!res.success) {
                     setErrorMsg('Failed!');
@@ -198,6 +209,8 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
                 setIsOnRunning(false);
                 setUpdateFlag((flag: any) => !flag);
                 setPageState(0);
+
+                toast.success('Successfully updated the user');
             }   
         }
         catch (err: any) {
@@ -335,6 +348,19 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
                                 <span>Line ID: </span>
                                 <input type="text" placeholder="Enter line id" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
                                     value={lineId} onChange={(e) => { setLineId(e.currentTarget.value); }} />
+                            </div>
+                            <div className='-mt-2 mb-4'>
+                                <span>Expire Date:<br/></span>
+                                <DatePicker
+                                    className='border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800'
+                                    selected={expireDate}
+                                    onChange={(date) => setExpireDate(date)}
+                                />
+                            </div>
+                            <div className='-mt-2 mb-4'>
+                                <span>Monthly Credit: </span>
+                                <input type="text" placeholder="Enter credit limit" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
+                                    value={creditLimit} onChange={(e) => { setCreditLimit(e.currentTarget.value) }} />
                             </div>
                             <div className='-mt-2 mb-4 flex items-center gap-6'>
                                 <span>Group: </span>

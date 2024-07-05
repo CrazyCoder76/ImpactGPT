@@ -107,8 +107,7 @@ export async function updateGroup(id: string, payload: {
         
         const cleanPayload = removeUndefined(payload);
         await GroupModel.findByIdAndUpdate(id,
-            { $set: cleanPayload },
-            { new: true, runValidators: true }
+            { $set: cleanPayload }
         );
         return { status: 'success' };
     }

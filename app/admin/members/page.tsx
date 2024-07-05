@@ -152,7 +152,7 @@ const Index = () => {
                 const res = await updateUser(user._id, { status: 'invited' });
                 if(res?.success) {
                     setUpdateFlag((flag) => !flag);
-                    toast.success("Successfully sent invitation");  
+                    toast.success(`Invitation sent to ${user.email}`);
                 }
                 else {
                     toast.error(res?.message);
@@ -193,6 +193,7 @@ const Index = () => {
             try {
                 const csv = Papa.parse(target?.result as string, { header: true });
                 const parsedData = csv?.data;
+                let count = 0;
                 
                 const group_dict: { [key: string]: string } = {};
                 groups.map(group => { group_dict[group.name] = (group._id || "") });
@@ -216,34 +217,40 @@ const Index = () => {
                         continue;
                     }
 
-                    await createUser(
-                        user[csv_headers[0]],
-                        user[csv_headers[1]],
-                        user[csv_headers[2]],
-                        user[csv_headers[1]] + " " + user[csv_headers[2]],
-                        user[csv_headers[13]],
-                        user[csv_headers[3]].toLowerCase(),
-                        new Date(user[csv_headers[4]]),
-                        user[csv_headers[5]],
-                        user[csv_headers[6]],
-                        user[csv_headers[8]],
-                        parseInt(user[csv_headers[9]]),
-                        user[csv_headers[10]],
-                        user[csv_headers[7]],
-                        user[csv_headers[11]],
-                        user[csv_headers[12]],
-                        user[csv_headers[14]],
-                        user[csv_headers[15]],
-                        user[csv_headers[16]],
-                        group_dict[user[csv_headers[17]]],
-                        hashedPassword,
-                        salt,
-                        expireDate,
-                        creditLimit
-                    );
+                    try {
+                        await createUser(
+                            user[csv_headers[0]],
+                            user[csv_headers[1]],
+                            user[csv_headers[2]],
+                            user[csv_headers[1]] + " " + user[csv_headers[2]],
+                            user[csv_headers[13]],
+                            user[csv_headers[3]].toLowerCase(),
+                            new Date(user[csv_headers[4]]),
+                            user[csv_headers[5]],
+                            user[csv_headers[6]],
+                            user[csv_headers[8]],
+                            parseInt(user[csv_headers[9]]),
+                            user[csv_headers[10]],
+                            user[csv_headers[7]],
+                            user[csv_headers[11]],
+                            user[csv_headers[12]],
+                            user[csv_headers[14]],
+                            user[csv_headers[15]],
+                            user[csv_headers[16]],
+                            group_dict[user[csv_headers[17]]],
+                            hashedPassword,
+                            salt,
+                            expireDate,
+                            creditLimit
+                        );
+                        count ++;
+                    }
+                    catch (error) {
+                        console.log(error);
+                    }
                 }
 
-                toast.success("Successfully imported users");
+                toast.success(`Successfully imported ${count} user${count > 1 ? "s" : ""}`);
             }
             catch (error) {
                 toast.error("CSV format is incorrect!");
