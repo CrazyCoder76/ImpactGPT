@@ -9,6 +9,19 @@ import { User } from '@/lib/types';
 export async function getUserByEmail(email: string) {
     try {
         await dbConnect();
+        const user = await UserModel.findOne({ email: email });
+        const userLean = await UserModel.findOne({ email: email }).lean();
+        console.log({user, userLean})
+        return user;
+    }
+    catch (err: any) {
+        return null;
+    }
+}
+
+export async function getUserByEmailLean(email: string) {
+    try {
+        await dbConnect();
         const user = await UserModel.findOne({ email: email }).lean();
         return user;
     }
