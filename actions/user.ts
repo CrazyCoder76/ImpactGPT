@@ -51,7 +51,7 @@ export async function createUser(
     hashedPassword: string,
     salt: string,
     expireDate: Date | undefined,
-    creditLimit: Number
+    creditLimit: Number | undefined
 ) {
     try {
         await dbConnect();
@@ -190,8 +190,7 @@ export async function updateUser(id: string, payload: {
         }
 
         const updatedUser = await UserModel.findByIdAndUpdate(id, 
-            { $set: cleanPayload },
-            { new: true, runValidators: true }
+            { $set: cleanPayload }
         );
 
         if (!updatedUser) {

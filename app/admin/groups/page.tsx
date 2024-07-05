@@ -128,7 +128,7 @@ const Page = () => {
                         const res = await updateUser(user.id, { status: 'invited' });
                         if(res?.success) {
                             setUpdateFlag((flag) => !flag);
-                            toast.success("Successfully sent invitation");  
+                            toast.success(`Invitation sent ${user.email}`);
                         }
                         else {
                             toast.error(res?.message);
