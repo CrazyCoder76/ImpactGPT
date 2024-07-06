@@ -16,7 +16,7 @@ import { toast } from 'sonner'
 import { format } from 'date-fns'
 import crypto from 'crypto'
 import { v4 as uuidv4 } from 'uuid';
-import { getStringFromBuffer } from '@/lib/utils'
+import { getStringFromBuffer, ResultCode } from '@/lib/utils'
 
 //import types
 import { Group, User } from '@/lib/types';
@@ -75,7 +75,7 @@ const Index = () => {
             user.firstName,
             user.lastName,
             user.gender,
-            user.dateOfBrith?.toISOString(),
+            user.dateOfBirth?.toISOString(),
             user.company,
             user.department,
             user.team,
@@ -159,7 +159,7 @@ const Index = () => {
                 }
             }
             else {
-                toast.error('Invitation email was not sent')
+                toast.error(`Invitation email was not sent to ${user.email}`)
             }
         }
         catch (err: any) {
@@ -181,8 +181,12 @@ const Index = () => {
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-          setFile(e.target.files[0])
-          handleImportCSV(e.target.files[0])
+            setFile(e.target.files[0])
+            handleImportCSV(e.target.files[0])
+            if (fileInputRef.current) {
+                (fileInputRef.current as HTMLInputElement).value = '';
+            }
+            setFile(null)
         }
     }
     
@@ -197,39 +201,37 @@ const Index = () => {
                 
                 const group_dict: { [key: string]: string } = {};
                 groups.map(group => { group_dict[group.name] = (group._id || "") });
+                const n = parsedData.length;
 
-                for(let i = 0; i < parsedData.length; i++) {
-                    const user: any = parsedData[i];
-                    const encoder = new TextEncoder();
-                    const salt = uuidv4();
-                    const saltedPassword = encoder.encode("123456" + salt);
-                    const hashedPasswordBuffer = hashPasswordBuffer(saltedPassword);
-                    const hashedPassword = getStringFromBuffer(hashedPasswordBuffer);
-                    let creditLimit: Number = 0;
-                    let expireDate: any = undefined;
-    
-                    const userGroup = groups.find(group => group.name == user[csv_headers[17]]);
-                    if (userGroup) {
-                        creditLimit = userGroup.creditLimit;
-                        expireDate = userGroup.expireDate
-                    }
-                    if (Object.keys(user).length < 16) {
-                        continue;
-                    }
-
+                for(let i = 0; i < n; i++) {
                     try {
-                        await createUser(
+                        const user: any = parsedData[i];
+                        const encoder = new TextEncoder();
+                        const salt = uuidv4();
+                        const saltedPassword = encoder.encode("123456" + salt);
+                        const hashedPasswordBuffer = hashPasswordBuffer(saltedPassword);
+                        const hashedPassword = getStringFromBuffer(hashedPasswordBuffer);
+                        let creditLimit: Number = 0;
+                        let expireDate: any = undefined;
+        
+                        const userGroup = groups.find(group => group.name == user[csv_headers[17]]);
+                        if (userGroup) {
+                            creditLimit = userGroup.creditLimit;
+                            expireDate = userGroup.expireDate
+                        }
+
+                        const result = await createUser(
                             user[csv_headers[0]],
                             user[csv_headers[1]],
                             user[csv_headers[2]],
                             user[csv_headers[1]] + " " + user[csv_headers[2]],
                             user[csv_headers[13]],
-                            user[csv_headers[3]].toLowerCase(),
+                            user[csv_headers[3]]?.toLowerCase(),
                             new Date(user[csv_headers[4]]),
                             user[csv_headers[5]],
                             user[csv_headers[6]],
                             user[csv_headers[8]],
-                            parseInt(user[csv_headers[9]]),
+                            parseInt(user[csv_headers[9]]) || undefined,
                             user[csv_headers[10]],
                             user[csv_headers[7]],
                             user[csv_headers[11]],
@@ -237,20 +239,26 @@ const Index = () => {
                             user[csv_headers[14]],
                             user[csv_headers[15]],
                             user[csv_headers[16]],
-                            group_dict[user[csv_headers[17]]],
+                            group_dict[user[csv_headers[17]]] || undefined,
                             hashedPassword,
                             salt,
                             expireDate,
                             creditLimit
                         );
-                        count ++;
+                        if (result.type == 'success') {
+                            count ++;
+                        }
                     }
                     catch (error) {
                         console.log(error);
                     }
                 }
-
-                toast.success(`Successfully imported ${count} user${count > 1 ? "s" : ""}`);
+                if (count > 0) {
+                    toast.success(`Successfully imported ${count} user${count > 1 ? "s" : ""}`);
+                }
+                else {
+                    toast.success("Users are already exist");
+                }
             }
             catch (error) {
                 toast.error("CSV format is incorrect!");
@@ -260,7 +268,7 @@ const Index = () => {
             }
         }
 
-        reader.readAsText(selectedFile)
+        reader.readAsText(selectedFile);
     }
     
     const onHandleClickImportCSV = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -273,11 +281,11 @@ const Index = () => {
             <div>
                 {
                     pageState == 1 ? <UserFormDialog open={true}
-                        state={pageState} setPageState={setPageState} setUpdateFlag={setUpdateFlag} /> :
+                        state={pageState} setPageState={setPageState} setUpdateFlag={setUpdateFlag} inviteUser={inviteUser} /> :
                         pageState == 2 ?
                             <UserFormDialog open={true} user={userOnUpdating}
-                                state={pageState} setPageState={setPageState} setUpdateFlag={setUpdateFlag} /> :
-                            pageState === 3 ? <InviteFormDialog open={true} setPageState={setPageState} inviteUser={inviteUser} /> : <></>
+                                state={pageState} setPageState={setPageState} setUpdateFlag={setUpdateFlag} inviteUser={inviteUser} /> :
+                            pageState === 3 ? <InviteFormDialog open={true} setPageState={setPageState} setUpdateFlag={setUpdateFlag} inviteUser={inviteUser} /> : <></>
                 }
                 <div className="font-semibold"><div>
                     Current members: {users && users.length}

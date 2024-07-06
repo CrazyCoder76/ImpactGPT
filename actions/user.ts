@@ -42,12 +42,12 @@ export async function getGroupUsers(groupId: string) {
 }
 
 export async function createUser(
-    title: string,
-    firstName: string,
-    lastName: string,
+    title: string | undefined,
+    firstName: string | undefined,
+    lastName: string | undefined,
     username: string,
     email: string,
-    gender: string,
+    gender: string | undefined,
     birthday: Date | undefined,
     company: string | undefined,
     department: string | undefined,
@@ -60,7 +60,7 @@ export async function createUser(
     phoneNumber: string | undefined,
     mobileNumber: string | undefined,
     lineId: string | undefined,
-    groupId: string,
+    groupId: string | undefined,
     hashedPassword: string,
     salt: string,
     expireDate: Date | undefined,
@@ -105,9 +105,11 @@ export async function createUser(
             });
             
             await new_user.save();
+            const newUserId = new_user._id.toString();
             return {
                 type: 'success',
-                resultCode: ResultCode.UserCreated
+                resultCode: ResultCode.UserCreated,
+                id: newUserId
             }
         }
     }
