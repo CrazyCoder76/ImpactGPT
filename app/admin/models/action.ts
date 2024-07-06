@@ -121,7 +121,7 @@ export async function testModel(endpoint: string, modelId: string, headers: any,
         project: projectId, // optional
         location: locationId, // optional
         // @ts-ignore
-        googleAuthOptions: auth 
+        googleAuthOptions: auth
       });
 
       const { text } = await generateText({
@@ -266,19 +266,21 @@ export async function addModel(data: GPTModel) {
     if (session && session.user) {
       await dbConnect();
       const models = await Model.find().sort({ weight: 1 });
+
       let headers: { [key: string]: string } = {};
+
       if (data?.isCustomModel == true) {
+        if (data?.headers) {
+          if (data.headers instanceof Map) { }
+          else if (typeof data.headers === 'object') {
+            headers = data.headers;
+          }
+        }
         if (data?.modelType == 'google vertex') {
           // Save private key as JSON file
           const fileName = `${uuidv4()}.json`;
-          if (data?.headers) {
-            if (data.headers instanceof Map) { }
-            else if (typeof data.headers === 'object') {
-              headers = data.headers;
-              fs.writeFileSync(`././db_json/${fileName}`, data.headers['private-key']);
-              headers['key-file-name'] = fileName;
-            }
-          }
+          fs.writeFileSync(`././db_json/${fileName}`, headers['private-key']);
+          headers['key-file-name'] = fileName;
         }
       }
       const model = new Model({
