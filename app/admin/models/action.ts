@@ -120,7 +120,8 @@ export async function testModel(endpoint: string, modelId: string, headers: any,
       const vertex = createVertex({
         project: projectId, // optional
         location: locationId, // optional
-        googleAuthOptions: auth
+        // @ts-ignore
+        googleAuthOptions: auth 
       });
 
       const { text } = await generateText({

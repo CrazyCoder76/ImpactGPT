@@ -147,6 +147,7 @@ export async function POST(req: Request) {
         const vertex = createVertex({
           project: projectId, // optional
           location: locationId, // optional
+          // @ts-ignore
           googleAuthOptions: auth
         });
 
