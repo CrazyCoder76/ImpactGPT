@@ -28,11 +28,12 @@ interface UserFormDialogProps extends DialogProps {
     state: number,
     setPageState: any,
     setUpdateFlag: any,
-    user?: User
+    user?: User,
+    inviteUser: Function
 }
 
 export function UserFormDialog({ ...props }: UserFormDialogProps) {
-    const { state, setPageState, user, setUpdateFlag } = props;
+    const { state, setPageState, user, setUpdateFlag, inviteUser } = props;
 
     const [title, setTitle] = useState('');
     const [firstName, setFirstName] = useState('');
@@ -134,13 +135,13 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
                 expire = expireDate || expire;
 
                 const result = await createUser(
-                    title,
+                    title || undefined,
                     firstName,
-                    lastName,
+                    lastName || undefined,
                     firstName + " " + lastName,
                     email,
                     gender,
-                    birthday,
+                    birthday || undefined,
                     company || undefined,
                     department || undefined,
                     position || undefined,
@@ -152,7 +153,7 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
                     phoneNumber || undefined,
                     mobileNumber || undefined,
                     lineId || undefined,
-                    groupId,
+                    groupId || undefined,
                     hashedPassword,
                     salt,
                     expire,
@@ -160,10 +161,13 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
                 );
 
                 if (result.resultCode !== ResultCode.UserCreated) throw new Error();
+
                 setUpdateFlag((flag: any) => !flag);
                 setPageState(0);
 
                 toast.success('Successfully created the user');
+
+                await inviteUser({ _id: result.id, email: email });
             }
             else if (state == 2) { //update a user
                 if (!user) return;
