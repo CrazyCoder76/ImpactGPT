@@ -47,8 +47,8 @@ export default function LoginForm() {
         toast.error(res);
       else {
         toast.success(res);
+        setStage(Stage.OtpInput);
       }
-      setStage(Stage.OtpInput);
       setRequestOtpPending(false);
     })
   }, [email])
