@@ -285,6 +285,7 @@ const Index = () => {
                         pageState == 2 ?
                             <UserFormDialog open={true} user={userOnUpdating}
                                 state={pageState} setPageState={setPageState} setUpdateFlag={setUpdateFlag} inviteUser={inviteUser} /> :
+                                //@ts-ignore
                             pageState === 3 ? <InviteFormDialog open={true} setPageState={setPageState} setUpdateFlag={setUpdateFlag} inviteUser={inviteUser} /> : <></>
                 }
                 <div className="font-semibold"><div>
