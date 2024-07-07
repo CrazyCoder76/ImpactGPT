@@ -38,7 +38,7 @@ type ModelHeaderFieldProps = {
 const initialModel: AddingModelType = {
   id: '',
   name: '',
-  modelType: '',
+  modelType: 'openai compatible',
   iconUrl: '',
   description: '',
   endPoint: '',
@@ -124,6 +124,7 @@ export function AddingModel({ backToMain, selectedModel }: React.ComponentProps<
             headers[header.key] = header.value;
           }
         }
+        console.log(`****** add ****`);
         const res = await addModel({
           name: model.name,
           iconUrl: model.iconUrl,
@@ -175,6 +176,7 @@ export function AddingModel({ backToMain, selectedModel }: React.ComponentProps<
 
   React.useEffect(() => {
     if (selectedModel && Object.keys(selectedModel).length !== 0) {
+      console.log(selectedModel);
       const plainHeaders = Object.entries(selectedModel.headers || {}).map(([key, value]) => ({ key, value }));
       setModel({ ...initialModel, ...selectedModel, headers: plainHeaders });
     }
