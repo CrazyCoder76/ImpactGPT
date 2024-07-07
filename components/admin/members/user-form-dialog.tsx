@@ -182,9 +182,6 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
                 }
                 credit = parseInt(creditLimit) || credit;
                 expire = expireDate || expire;
-                
-                console.log(password);
-                console.log(password || undefined);
 
                 const res = await updateUser(user._id, {
                     title,
