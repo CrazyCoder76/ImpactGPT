@@ -1,7 +1,7 @@
 'use client'
 
 import { IconArrowRight, IconSpinner } from "@/components/ui/icons"
-import { type DialogProps } from "@radix-ui/react-alert-dialog"
+import { type DialogProps } from '@radix-ui/react-dialog'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import React, { SetStateAction } from "react"
 import useStore from "@/lib/store"
