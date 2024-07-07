@@ -293,7 +293,7 @@ export async function addModel(data: GPTModel) {
         headers: headers,
         weight: models.length === 0 ? 100 : models[models.length - 1].weight + 100,
         isPinned: true,
-        isCustomModel: data.isCustomModel || true,
+        isCustomModel: true,
         modelType: data?.modelType || ''
       });
 
@@ -327,7 +327,7 @@ export async function updateModel(data: any) {
           weight: data.weight,
           isPinned: true,
           modelType: data.modelType,
-          isCustomModel: data?.isCustomModel || false
+          isCustomModel: true
         });
       await updated_model.save();
       return {

@@ -29,7 +29,8 @@ export async function POST(req: Request) {
     res = await getModelFullInfoByModelId(modelId);
     if (res.status == 'error') return;
     const modelInfo = res.model;
-
+    console.log(modelInfo);
+    
     if (modelInfo?.isCustomModel == false) {
 
       let model;
