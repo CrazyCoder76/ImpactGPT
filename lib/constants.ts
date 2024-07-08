@@ -1,0 +1,42 @@
+export const sampleUsers = [
+  {
+    "Email": "john.doe@techcorp.com",
+    "Title": "Mr.",
+    "Firstname": "John",
+    "Lastname": "Doe",
+    "Gender": "Male",
+    "Date of Birth": "1/1/1980",
+    "Company": "TechCorp",
+    "Department": "Engineering",
+    "Team": "Backend",
+    "Position": "Senior Developer",
+    "Rank": 5,
+    "Location": "New York",
+    "Employee ID": "EMP001",
+    "Personal Info": "Experienced software developer with expertise in backend systems.",
+    "Telephone Number": "123-456-7890",
+    "Mobile Phone Number": "098-765-4321",
+    "LINE ID": "johndoe",
+    "Group": "Impact AI"
+  },
+  {
+    "Email": "jane.smith@healthsolutions.com",
+    "Title": "Ms.",
+    "Firstname": "Jane",
+    "Lastname": "Smith",
+    "Gender": "Female",
+    "Date of Birth": "5/15/1992",
+    "Company": "HealthSolutions",
+    "Department": "Research",
+    "Team": "Analysis",
+    "Position": "Research Scientist",
+    "Rank": 4,
+    "Location": "Boston",
+    "Employee ID": "EMP002",
+    "Personal Info": "Research scientist specializing in genetic analysis and data interpretation.",
+    "Telephone Number": "321-654-0987",
+    "Mobile Phone Number": "876-543-2109",
+    "LINE ID": "janesmith",
+    "Group": "Impact AI"
+  }
+];
