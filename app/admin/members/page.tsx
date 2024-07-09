@@ -1,4 +1,4 @@
-"use client";
+    "use client";
 
 import { useEffect, useRef, useState } from 'react';
 
@@ -335,7 +335,7 @@ const Index = () => {
                             <IconExport />
                             <span>Export CSV</span>
                         </button>
-                        <button onClick={handleDownloadSampleCSV} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-blue-600 border-blue-600 hover:border-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 gap-2" rel="noreferrer noopener">
+                        <button onClick={handleDownloadSampleCSV} className="inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md shadow-sm text-blue-600 border-blue-600 hover:border-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 gap-2" rel="noreferrer noopener">
                             <IconDownload />
                             <span>Download sample file</span>
                         </button>
