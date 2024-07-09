@@ -1,4 +1,5 @@
 import type { NextAuthConfig } from 'next-auth'
+
 // import { signIn } from 'next-auth/react'
 // import { NextResponse } from 'next/server'
 // import { getUserById } from './actions/user'
@@ -6,21 +7,19 @@ import type { NextAuthConfig } from 'next-auth'
 export const authConfig = {
   secret: process.env.AUTH_SECRET,
   pages: {
-    // signIn: '/auth/login',
+    signIn: '/auth/login',
+    error: '/auth/error'
     // newUser: '/signup'
   },
+  providers: [],
   callbacks: {
     async authorized({ auth, request: { nextUrl } }) {
+      const email = auth?.user?.email
 
-      const isLoggedIn = !!auth?.user;
-      const isOnLoginPage = nextUrl.pathname.startsWith('/auth/login');
-
-      if (isLoggedIn) {
-        if (isOnLoginPage) {
-          // return NextResponse.redirect(new URL('/', nextUrl));
-        }
+      if (email) {
+        return true
       }
-      return true;
+      return false
     },
     async jwt({ token, user }) {
       if (user) {
@@ -32,18 +31,16 @@ export const authConfig = {
     async session({ session, token }) {
       if (token) {
         const { id } = token as { id: string }
-        const { user } = session;
+        const { user } = session
         session = { ...session, user: { ...user, id } }
       }
 
       return session
-    },
-    // async signIn({ user, account, profile, email, credentials }) {
-    //   // Redirect to the home page after login
-    //   // return NextResponse.redirect(new URL('/', process.env.NEXTAUTH_URL));
-    //   return true;
-    // }
+    }
   },
-  providers: [],
-  trustHost: true, // This line trusts all hosts, not recommended for production
+  // async signIn({ user, account, profile, email, credentials }) {
+  //   // Redirect to the home page after login
+  //   return true
+  // }
+  trustHost: true // This line trusts all hosts, not recommended for production,
 } satisfies NextAuthConfig

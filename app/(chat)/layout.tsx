@@ -4,7 +4,7 @@ import { auth, signOut } from '@/auth'
 import { cn } from '@/lib/utils'
 import { Session } from '@/lib/types'
 import { redirect } from 'next/navigation'
-import { getUserById } from '@/actions/user'
+import { getUserByEmail } from '@/actions/user'
 import { getChatList } from '@/app/(chat)/actions'
 
 interface ChatLayoutProps {
@@ -20,7 +20,7 @@ export default async function ChatLayout({ children }: ChatLayoutProps) {
   if (!session?.user?.id) {
     redirect('/auth/login')
   }
-  const user = await getUserById(session.user.id);
+  const user = await getUserByEmail(session.user.email);
   if (user == null) {
     redirect('/auth/login');
   }
