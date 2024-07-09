@@ -4,7 +4,7 @@ import { auth } from '@/auth'
 import { notFound, redirect } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Session } from '@/lib/types'
-import { getUserById } from '@/actions/user'
+import { getUserByEmail } from '@/actions/user'
 
 interface ChatLayoutProps {
   children: React.ReactNode
@@ -14,11 +14,13 @@ h-[calc(100vh_-_theme(spacing.16))]
 */
 export default async function AdminLayout({ children }: ChatLayoutProps) {
   const session = (await auth()) as Session;
+  console.log({ session });
+
   if (!session?.user?.id) {
     redirect('/auth/login')
   }
 
-  const user = await getUserById(session.user.id);
+  const user = await getUserByEmail(session.user.email);
   if (!user) redirect('/auth/login');
 
   {/* @ts-ignore */ }

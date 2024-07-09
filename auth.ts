@@ -1,14 +1,38 @@
 import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { authConfig } from './auth.config'
+import GoogleProvider from 'next-auth/providers/google'
 import { z } from 'zod'
-import { getStringFromBuffer } from './lib/utils'
+import { authConfig } from './auth.config'
+
 // import { getUser } from './app/auth/login/actions'
 
-import { getUserByEmail } from './actions/user'
+import { getUserByEmail, getUserByEmailLean } from './actions/user'
+import { NextResponse } from 'next/server'
 
-export const { auth, signIn, signOut } = NextAuth({
+export const {
+  handlers: { GET, POST },
+  auth,
+  signIn,
+  signOut
+} = NextAuth({
   ...authConfig,
+  callbacks: {
+    ...authConfig.callbacks,
+    // @ts-ignore
+    async signIn({ user, account }) {
+      if (account?.provider === 'google') {
+        const email = user.email
+        const userDoc = await getUserByEmailLean(email!)
+        console.log({ userDoc })
+        if (userDoc) {
+          return true
+        }
+        return false
+      }
+      return true
+    }
+  },
+  trustHost: true, // This line trusts all hosts, not recommended for production
   providers: [
     CredentialsProvider({
       // @ts-ignore
@@ -37,6 +61,10 @@ export const { auth, signIn, signOut } = NextAuth({
 
         return null
       }
+    }),
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET
     })
   ]
 })
