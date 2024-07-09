@@ -203,7 +203,7 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
                     mobileNumber: mobileNumber || undefined,
                     lineId: lineId || undefined,
                     groupId: groupId,
-                    password,
+                    password: password || undefined,
                     expireDate: expire,
                     creditLimit: credit
                 });

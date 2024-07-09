@@ -1,4 +1,4 @@
-"use client";
+    "use client";
 
 import { useEffect, useRef, useState } from 'react';
 
@@ -11,7 +11,7 @@ import {
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { UserFormDialog } from '@/components/admin/members/user-form-dialog';
-import { IconAdd, IconArrowLeft, IconEdit, IconRemove, IconThreeDots, IconUser, IconDisable, IconInvite, IconExport, IconImport } from "@/components/ui/icons";
+import { IconAdd, IconArrowLeft, IconEdit, IconRemove, IconThreeDots, IconUser, IconDisable, IconInvite, IconExport, IconImport, IconDownload } from "@/components/ui/icons";
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import crypto from 'crypto'
@@ -28,11 +28,12 @@ import { InviteFormDialog } from '@/components/admin/members/invite-form-dialog'
 import { userInfo } from 'os';
 import Papa from 'papaparse'
 import { sentInviteEmail } from '@/actions/mail';
+import { sampleUsers } from '@/lib/constants';
 
 const csv_headers = [
-    'Title', 'Firstname', 'Lastname', 'Gender', 'Date of Birth', 'Company', 'Department',
+    'Email', 'Title', 'Firstname', 'Lastname', 'Gender', 'Date of Birth', 'Company', 'Department',
     'Team', 'Position', 'Rank', 'Location', 'Employee ID', 'Personal Info',
-    'Email', 'Telephone Number', 'Mobile Phone Number', 'LINE ID', 'Group'
+    'Telephone Number', 'Mobile Phone Number', 'LINE ID', 'Group'
 ];
 
 const Index = () => {
@@ -71,6 +72,7 @@ const Index = () => {
         groups.map(group => { group_dict[group?._id || ""] = group.name });
     
         const csvRows = users.map(user => [
+            user.email,
             user.title,
             user.firstName,
             user.lastName,
@@ -84,7 +86,6 @@ const Index = () => {
             user.location,
             user.employeeId,
             user.bio,
-            user.email,
             user.phoneNumber,
             user.mobileNumber,
             user.lineId,
@@ -94,6 +95,17 @@ const Index = () => {
         return [
             csv_headers.join(','),
             ...csvRows.map(row => row.join(','))
+        ].join('\n');
+    };
+    
+    const loadSampleCSV = (users: any): string => {
+        const csvRows = users.map((user: any) => {
+            return csv_headers.map((header: string) => user[header]);
+        });
+    
+        return [
+            csv_headers.join(','),
+            ...csvRows.map((row: any) => row.join(','))
         ].join('\n');
     };
 
@@ -179,6 +191,18 @@ const Index = () => {
         document.body.removeChild(link);
     };
 
+    const handleDownloadSampleCSV = async () => {
+        const csvContent = loadSampleCSV(sampleUsers);
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'sample.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             setFile(e.target.files[0])
@@ -221,21 +245,21 @@ const Index = () => {
                         }
 
                         const result = await createUser(
-                            user[csv_headers[0]],
                             user[csv_headers[1]],
                             user[csv_headers[2]],
-                            user[csv_headers[1]] + " " + user[csv_headers[2]],
-                            user[csv_headers[13]],
-                            user[csv_headers[3]]?.toLowerCase(),
-                            new Date(user[csv_headers[4]]),
-                            user[csv_headers[5]],
+                            user[csv_headers[3]],
+                            user[csv_headers[2]] + " " + user[csv_headers[3]],
+                            user[csv_headers[0]],
+                            user[csv_headers[4]]?.toLowerCase(),
+                            new Date(user[csv_headers[5]]),
                             user[csv_headers[6]],
-                            user[csv_headers[8]],
-                            parseInt(user[csv_headers[9]]) || undefined,
-                            user[csv_headers[10]],
                             user[csv_headers[7]],
+                            user[csv_headers[9]],
+                            parseInt(user[csv_headers[10]]) || undefined,
                             user[csv_headers[11]],
+                            user[csv_headers[8]],
                             user[csv_headers[12]],
+                            user[csv_headers[13]],
                             user[csv_headers[14]],
                             user[csv_headers[15]],
                             user[csv_headers[16]],
@@ -295,22 +319,62 @@ const Index = () => {
                     <div className="flex items-center justify-start gap-2">
                         <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-400 gap-2" onClick={() => { setPageState(3) }}>
                             <IconAdd />
-                            <span className="hidden md:block">Invite Members</span>
+                            <span>Invite Members</span>
                         </button>
                         <button onClick={() => { setPageState(1); }} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 gap-2" rel="noreferrer noopener">
                             <IconArrowLeft />
-                            <span className="hidden md:block">Add New Member</span>
+                            <span>Add New Member</span>
                         </button>
                     </div>
-                    <div className="flex items-center justify-start gap-2">
+                    <div className="hidden lg:flex items-center justify-start gap-2">
                         <button onClick={onHandleClickImportCSV} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-gray-400 gap-2" rel="noreferrer noopener">
                             <IconImport />
-                            <span className="hidden md:block">Import CSV</span>
+                            <span>Import Users</span>
                         </button>
                         <button onClick={handleDownloadCSV} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:bg-gray-400 gap-2" rel="noreferrer noopener">
                             <IconExport />
-                            <span className="hidden md:block">Export CSV</span>
+                            <span>Export CSV</span>
                         </button>
+                        <button onClick={handleDownloadSampleCSV} className="inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md shadow-sm text-blue-600 border-blue-600 hover:border-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 gap-2" rel="noreferrer noopener">
+                            <IconDownload />
+                            <span>Download sample file</span>
+                        </button>
+                    </div>
+                    
+                    <div className="lg:hidden relative inline-block text-left" data-headlessui-state="">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className="hover:bg-gray-100 rounded-full size-10 flex items-center justify-center" id="headlessui-menu-button-:r3:" type="button" aria-haspopup="menu" aria-expanded="false" data-headlessui-state="">
+                                    <IconThreeDots />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuItem className="flex-col items-start">
+                                    <button onClick={onHandleClickImportCSV}
+                                        className="text-gray-700 space-x-2 flex w-full items-center justify-start px-4 py-2 text-sm whitespace-nowrap disabled:cursor-default disabled:opacity-50"
+                                    >
+                                        <IconImport />
+                                        <span>Import Users</span>
+                                    </button>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="flex-col items-start">
+                                    <button onClick={handleDownloadCSV}
+                                        className="text-gray-700 space-x-2 flex w-full items-center justify-start px-4 py-2 text-sm whitespace-nowrap disabled:cursor-default disabled:opacity-50"
+                                    >
+                                        <IconExport />
+                                        <span>Export CSV</span>
+                                    </button>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="flex-col items-start">
+                                    <button onClick={handleDownloadSampleCSV}
+                                        className="text-gray-700 space-x-2 flex w-full items-center justify-start px-4 py-2 text-sm whitespace-nowrap disabled:cursor-default disabled:opacity-50"
+                                    >
+                                        <IconDownload />
+                                        <span>Download sample file</span>
+                                    </button>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                     <input
                         type="file"
@@ -323,7 +387,7 @@ const Index = () => {
 
                 {/* Member List */}
                 <div className="mt-8 overflow-x-auto">
-                    <table className="w-full min-w-[600px] divide-y divide-gray-300 mb-20">
+                    <table className="w-full min-w-[600px] divide-y divide-gray-300 mb-10">
                         <thead className="bg-gray-50">
                             <tr>
                                 <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Member</th>
