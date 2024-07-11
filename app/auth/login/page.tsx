@@ -27,15 +27,15 @@ export default async function LoginPage({ searchParams }: { searchParams: { [key
         >
           <LoginWithGoogle />
         </form>
-        {/* <form
+        <form
           className='mt-2'
           action={async () => {
             'use server';
-            await signIn('google', { redirect: true });
+            await signIn('azure-ad', { redirect: true });
           }}
         >
           <LoginWithAzureAD />
-        </form> */}
+        </form>
 
         <div className="my-6 relative">
           <div className="absolute inset-0 flex items-center" aria-hidden="true">

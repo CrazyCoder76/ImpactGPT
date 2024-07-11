@@ -26,6 +26,10 @@ import { usePromptPanelStore } from '@/lib/store'
 import { getAgentIconUrl } from '@/app/admin/agents/actions'
 import { evaluateUsage } from '@/components/chat/prompt/evaluate-usage';
 import { IconGPT, IconGPT4, IconGemini, IconHaiku } from '@/components/ui/icons';
+import useRichKeysWithTextarea from '@/lib/hooks/use-rich-keys-with-textarea';
+import ChatSearchPrompt from '../chat-search-prompt';
+import ChatSearchAgent from '../chat-search-agent';
+import { useOnClickOutside } from 'usehooks-ts';
 
 export const getMessageIcon = (agentIconUrl: string, model?: GPTModel) => {
   let icon;
@@ -57,7 +61,6 @@ export const getMessageIcon = (agentIconUrl: string, model?: GPTModel) => {
 export function PromptForm({ session, id }: { session: Session, id: string }) {
   const router = useRouter()
   const [pending, setPending] = useState<boolean>(false);
-  const { formRef, onKeyDown } = useEnterSubmit({ pending });
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const [messages, setMessages] = useUIState<typeof AI>();
   const [aiState, setAIState] = useAIState<typeof AI>();
@@ -65,12 +68,43 @@ export function PromptForm({ session, id }: { session: Session, id: string }) {
   const [promptLibraryOpen, setPromptLibraryOpen] = useState(false);
   const [outputControlOpen, setOutputControlOpen] = useState(false);
 
+  const { formRef, onKeyDown } = useEnterSubmit({ pending, isEnterToSend });
+  const {
+    onKeyUp,
+    showSearchPromptModal,
+    setShowSearchPromptModal,
+    showSearchAgentModal,
+    setShowSearchAgentModal,
+    refSearchPromptInput,
+    refSearchAgentInput
+  } = useRichKeysWithTextarea();
+
   const { selectedAgent, currentModel, setNewChatId, input, setInput } = useStore();
   const { setOnUsePromptHandler } = usePromptPanelStore();
+
+  const searchPromptModalRef = useRef<HTMLDivElement>(null);
+  const searchPromptAgentRef = useRef<HTMLDivElement>(null);
+  useOnClickOutside(searchPromptModalRef, () => {
+    setShowSearchPromptModal(false);
+  })
+  useOnClickOutside(searchPromptAgentRef, () => {
+    setShowSearchAgentModal(false);
+  })
 
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus()
+    }
+    document.onkeydown = (e: KeyboardEvent) => {
+      if (e.key === '/') {
+        if (document.activeElement !== inputRef.current && document.activeElement !== refSearchPromptInput.current) {
+          inputRef.current?.focus();
+          e.preventDefault();
+        }
+      }
+    }
+    return () => {
+      document.onkeydown = null;
     }
   }, [])
 
@@ -186,6 +220,22 @@ export function PromptForm({ session, id }: { session: Session, id: string }) {
   const onUsePromptHandler = (prompt: Prompt) => {
     setPromptLibraryOpen(false);
     setInput(prompt.prompt);
+
+    setTimeout(() => {
+      const input = inputRef.current;
+      if (!input) return;
+      input.focus();
+      const rx = /\{\{[^}]+\}\}/
+      const from = input.selectionEnd
+      const str = input.value.slice(from);
+      const match = rx.exec(str);
+      if (match) {
+        const st = from + str.indexOf(match[0]);
+        const ed = st + match[0].length;
+        input.selectionEnd = ed;
+        input.selectionStart = st;
+      }
+    }, 100)
   }
 
   return (
@@ -211,9 +261,9 @@ export function PromptForm({ session, id }: { session: Session, id: string }) {
           </div>
         ))}
       </div >
-      { outputControlOpen &&
+      {outputControlOpen &&
         <div>
-          
+
         </div>
       }
       <form
@@ -236,7 +286,7 @@ export function PromptForm({ session, id }: { session: Session, id: string }) {
                     onClick={() => {
                       setOutputControlOpen(prev => !prev);
                     }}
-                    >
+                  >
                     <IconPen />
                   </Button>
                 </div>
@@ -252,11 +302,23 @@ export function PromptForm({ session, id }: { session: Session, id: string }) {
                       </label>
                     </div>)}
                   <div className='relative w-full'>
+                    <div className={`w-[300px] h-[330px] bg-white dark:bg-zinc-900 border overflow-hidden border-gray-300
+                    dark:border-gray-500 rounded-lg shadow-lg absolute bottom-full left-0 -translate-y-4
+                      ${showSearchPromptModal ? '' : 'hidden'}`} ref={searchPromptModalRef}>
+                      <ChatSearchPrompt ref={refSearchPromptInput} setShowModal={setShowSearchPromptModal} textAreaRef={inputRef} />
+                    </div>
+                    <div className={`w-full bg-white dark:bg-zinc-900 border overflow-hidden
+                      border-gray-300 dark:border-gray-500 rounded-lg shadow-lg absolute bottom-full left-0 -translate-y-4
+                      ${showSearchAgentModal ? '' : 'hidden'}`} ref={searchPromptAgentRef}>
+                      <ChatSearchAgent ref={refSearchAgentInput} setShowModal={setShowSearchAgentModal} textAreaRef={inputRef} />
+                    </div>
                     <Textarea
                       placeholder='Press "/" to focus input'
                       value={input}
+                      ref={inputRef}
                       onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
                       onKeyDown={onKeyDown}
+                      onKeyUp={onKeyUp}
                       onFocus={(e: React.ChangeEvent<HTMLTextAreaElement>) => e.currentTarget.placeholder = 'Type "/" for menu, "@" to mention an AI agent'}
                       onBlur={(e: React.ChangeEvent<HTMLTextAreaElement>) => e.currentTarget.placeholder = 'Press "/" to focus input'}
                       className='relative block w-full rounded-md border-0 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-700 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:py-1.5 min-h-[36px] resize-none dark:bg-gray-900 dark:text-white dark:focus:ring-blue-900 pl-12 md:pl-[60px] max-h-[40px] sm:text-sm sm:leading-6 outline-none'
