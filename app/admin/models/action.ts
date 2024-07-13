@@ -128,7 +128,7 @@ export async function testModel(endpoint: string, modelId: string, headers: any,
         model: vertex(modelId),
         prompt: 'Hi! who are you?'
       });
-      // fs.unlinkSync(`././db_json/${fileName}`);
+      fs.unlinkSync(`././db_json/${fileName}`);
       console.log(`resposne from Vertex: ${text}`);
     }
     else {
@@ -200,7 +200,7 @@ export async function getModelByModelId(modelId: string) {
 export async function getModelFullInfoByModelId(modelId: string) {
   try {
     await dbConnect();
-    const model = await Model.findOne({ modelId: modelId });
+    const model = await Model.findById(modelId);
     if (model) {
       return {
         status: 'success',
@@ -278,9 +278,9 @@ export async function addModel(data: GPTModel) {
         }
         if (data?.modelType == 'google vertex') {
           // Save private key as JSON file
-          const fileName = `${uuidv4()}.json`;
-          fs.writeFileSync(`././db_json/${fileName}`, headers['private-key']);
-          headers['key-file-name'] = fileName;
+          // const fileName = `${uuidv4()}.json`;
+          // fs.writeFileSync(`././db_json/${fileName}`, headers['private-key']);
+          // headers['key-file-name'] = fileName;
         }
       }
       const model = new Model({

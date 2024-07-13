@@ -117,7 +117,7 @@ export const sendOTPEmail = async (to: string, otp: string) => {
   }
 }
 
-export const sentInviteEmail = async ({to}: {to: string}) => {
+export const sentInviteEmail = async ({ to }: { to: string }) => {
   try {
     await connectToDatabase()
     let invitationTemplate = await EmailSettingModel.findOne({ name: 'Invitation Email Template' })

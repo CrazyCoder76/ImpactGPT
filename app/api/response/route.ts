@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { streamText, generateText } from 'ai';
 import OpenAI from 'openai';
 
@@ -19,18 +20,18 @@ const encoder = new TextEncoder()
 export async function POST(req: Request) {
   try {
     const data = await req.json();
-    const { messages, agentId, modelId } = data;
+    const { messages, agentId, modelId, id } = data;
     let res, agent, system = '';
 
     if (agentId != 'default' && agentId != '') agent = await Agent.findById(agentId);
     if (agent) system = agent.instruction;
     else system = 'You are a helpful assistant.';
 
-    res = await getModelFullInfoByModelId(modelId);
+    res = await getModelFullInfoByModelId(id);
     if (res.status == 'error') return;
     const modelInfo = res.model;
     console.log(modelInfo);
-    
+
     if (modelInfo?.isCustomModel == false) {
 
       let model;
@@ -142,9 +143,16 @@ export async function POST(req: Request) {
         const projectId = headers['project-id'] || '';
         const locationId = headers['location-id'] || '';
 
+        // console.log(headers);
+
+        // Save private key as JSON file
+        const fileName = `${uuidv4()}.json`;
+        fs.writeFileSync(`././db_json/${fileName}`, headers['private-key']);
+
         const auth = new GoogleAuth({
-          keyFilename: `././db_json/${headers['key-file-name']}`
+          keyFilename: `././db_json/${fileName}`
         });
+
         const vertex = createVertex({
           project: projectId, // optional
           location: locationId, // optional
@@ -153,6 +161,7 @@ export async function POST(req: Request) {
         });
 
         model = vertex(modelId);
+        fs.unlinkSync(`././db_json/${fileName}`);
       }
 
       if (!model) throw new Error('model not found!');
@@ -164,9 +173,8 @@ export async function POST(req: Request) {
         messages: messages
       });
       const iterator = makeIterator(result.textStream);
-
       const stream = iteratorToStream(iterator);
-
+      
       return new Response(stream)
     }
   }

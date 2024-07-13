@@ -103,9 +103,12 @@ export function PromptForm({ session, id }: { session: Session, id: string }) {
     }));
 
     messages = [...messages, { role: 'user', content: value, date: new Date() }];
+    console.log(currentModel);
+
 
     const payload = {
       messages: messages,
+      id: currentModel?.id || '',
       modelId: currentModel?.modelId || '',
       agentId: !selectedAgent ? '' : selectedAgent.id,
       userId: session.user.id
