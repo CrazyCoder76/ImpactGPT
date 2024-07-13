@@ -21,6 +21,8 @@ export async function POST(req: Request) {
   try {
     const data = await req.json();
     const { messages, agentId, modelId, id } = data;
+    let fileName = '';
+
     let res, agent, system = '';
 
     if (agentId != 'default' && agentId != '') agent = await Agent.findById(agentId);
@@ -146,7 +148,7 @@ export async function POST(req: Request) {
         // console.log(headers);
 
         // Save private key as JSON file
-        const fileName = `${uuidv4()}.json`;
+        fileName = `${uuidv4()}.json`;
         fs.writeFileSync(`././db_json/${fileName}`, headers['private-key']);
 
         const auth = new GoogleAuth({
@@ -161,7 +163,7 @@ export async function POST(req: Request) {
         });
 
         model = vertex(modelId);
-        fs.unlinkSync(`././db_json/${fileName}`);
+        // fs.unlinkSync(`././db_json/${fileName}`);
       }
 
       if (!model) throw new Error('model not found!');
@@ -175,7 +177,8 @@ export async function POST(req: Request) {
       const iterator = makeIterator(result.textStream);
       const stream = iteratorToStream(iterator);
       
-      return new Response(stream)
+      fs.unlinkSync(`././db_json/${fileName}`);
+      return new Response(stream);
     }
   }
   catch (err: any) {
