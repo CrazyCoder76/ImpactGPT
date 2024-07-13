@@ -1,15 +1,19 @@
 'use client'
 
 import { IconArrowRight, IconSpinner } from "@/components/ui/icons"
-import { type DialogProps } from "@radix-ui/react-alert-dialog"
+import { type DialogProps } from '@radix-ui/react-dialog'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import React, { SetStateAction } from "react"
 import useStore from "@/lib/store"
 import { toast } from "sonner"
-import { getUserByEmailLean } from "@/actions/user"
+import { createUser, getUserByEmailLean } from "@/actions/user"
+import { v4 as uuidv4 } from 'uuid';
+import { ResultCode, getMessageFromCode, getStringFromBuffer } from '@/lib/utils'
+import crypto from 'crypto'
 
 interface InviteFormDialogProps extends DialogProps {
   setPageState: React.Dispatch<SetStateAction<number>>,
+  setUpdateFlag: Function,
   inviteUser: Function
 }
 
@@ -19,7 +23,7 @@ const validateEmail = (email: string) => {
 };
 
 export function InviteFormDialog({ ...props }: InviteFormDialogProps) {
-  const { setPageState, inviteUser } = props;
+  const { setPageState, setUpdateFlag, inviteUser } = props;
   const { currentUser } = useStore();
   const [emails, setEmails] = React.useState<string[]>([]);
   const [error, setError] = React.useState<string>('');
@@ -38,15 +42,74 @@ export function InviteFormDialog({ ...props }: InviteFormDialogProps) {
     setEmails(lines);
   }
 
+  const hashPasswordBuffer = (saltedPassword: any) => {
+      const hash = crypto.createHash('sha256');
+      hash.update(saltedPassword);
+      return hash.digest();
+  };
+
+  const createNewUser = async (email: string) => {
+    try {
+      const encoder = new TextEncoder()
+      const salt = uuidv4()
+      const saltedPassword = encoder.encode('123456' + salt)
+      const hashedPasswordBuffer = hashPasswordBuffer(saltedPassword);
+      const hashedPassword = getStringFromBuffer(hashedPasswordBuffer);
+      const result = await createUser(
+        undefined,
+        undefined,
+        undefined,
+        "New User",
+        email,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        hashedPassword,
+        salt,
+        undefined,
+        undefined
+      );
+
+      if (result.resultCode !== ResultCode.UserCreated) {
+        throw new Error(getMessageFromCode(result.resultCode))
+      }
+      return result;
+    }
+    catch (error: any) {
+      toast.error(error.message);
+    }
+  }
+
   const handleInviteMembers = async () => {
     try {
       setPending(true);
-      for(let i = 0; i < emails.length; i++) {
+      const n = emails.length;
+      for(let i = 0; i < n; i++) {
           const user = await getUserByEmailLean(emails[i]);
-          if (!user) continue;
 
-          inviteUser(user);
+          if (!user) {
+            const result = await createNewUser(emails[i]);
+            if (result) {
+              await inviteUser({ _id: result.id, email: emails[i]});
+            }
+          }
+          else {
+            await inviteUser(user);
+          }
       }
+
+      setUpdateFlag((prev: any) => !prev);
       setPageState(0);
     }
     catch (error) {

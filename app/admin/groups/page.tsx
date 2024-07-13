@@ -16,7 +16,7 @@ import { getGroups, deleteGroup, updateGroup } from '@/actions/group';
 import { Group } from '@/lib/types';
 import { GroupFormDialog } from '@/components/admin/groups/group-form-dialog';
 import { format } from 'date-fns'
-import { getGroupUsers, updateUser } from '@/actions/user';
+import { deleteUserById, getGroupUsers, updateUser } from '@/actions/user';
 import { sentInviteEmail } from '@/actions/mail';
 
 const Page = () => {
@@ -51,9 +51,13 @@ const Page = () => {
 
     const onDeleteGroup = async (id: string) => {
         try {
+            const users = await getGroupUsers(id);
+
+            users?.map((user: any) => deleteUserById(user.id));
+            
             const res = await deleteGroup(id);
             if (res.status = 'success') {
-                toast.success('Removed Successfully!');
+                toast.success('Group removed Successfully!');
                 updatePage();
             }
             else {
