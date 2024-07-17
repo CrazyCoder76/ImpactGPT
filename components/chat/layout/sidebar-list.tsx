@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils"
 import { logout } from '@/app/(chat)/actions'
 import { IconUser } from '@/components/ui/icons'
 import { useProfileStore } from '@/lib/store'
+import { useEffect, useState } from 'react'
+import { getUserById } from '@/actions/user'
 
 interface SidebarListProps {
   children?: React.ReactNode,
@@ -19,10 +21,25 @@ interface SidebarListProps {
 
 export function SidebarList({ session, chats }: SidebarListProps) {
   const { isUpdatingProfile, setIsUpdatingProfile } = useProfileStore();
+  const [username, setUsername] = useState("");
 
   const onClickUserProfile = () => {
     setIsUpdatingProfile(true);
   }
+
+  const loadInitialData = async () => {
+    try {
+      const data = await getUserById(session?.user?.id);
+      setUsername(data?.name);
+    }
+    catch (err) {
+      console.error(err);
+    }
+  }
+
+  useEffect(() => {
+    loadInitialData();
+  }, [isUpdatingProfile]);
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -48,7 +65,7 @@ export function SidebarList({ session, chats }: SidebarListProps) {
             <div className='shrink-0 size-6 rounded-sm'>
               <IconUser />
             </div>
-            <span>{session?.user?.name}</span>
+            <span>{username}</span>
           </button>
           <form action={logout}>
             <button

@@ -1,3 +1,4 @@
+
 import { Header } from '@/components/chat/layout/header'
 import { SidebarDesktop } from '@/components/chat/layout/sidebar-desktop'
 import { auth, signOut } from '@/auth'
@@ -38,7 +39,7 @@ export default async function ChatLayout({ children }: ChatLayoutProps) {
           {children}
         </div>
       </main>
-      <UserProfileDialog />
+      <UserProfileDialog session={session}/>
     </div>
   )
 }
