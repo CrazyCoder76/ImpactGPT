@@ -6,6 +6,7 @@ import { Session } from '@/lib/types'
 import { redirect } from 'next/navigation'
 import { getUserByEmail } from '@/actions/user'
 import { getChatList } from '@/app/(chat)/actions'
+import { UserProfileDialog } from '@/components/chat/user-profile-dialog'
 
 interface ChatLayoutProps {
   children: React.ReactNode
@@ -37,6 +38,7 @@ export default async function ChatLayout({ children }: ChatLayoutProps) {
           {children}
         </div>
       </main>
+      <UserProfileDialog />
     </div>
   )
 }

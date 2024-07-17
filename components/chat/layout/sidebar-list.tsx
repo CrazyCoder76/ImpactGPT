@@ -1,3 +1,5 @@
+"use client"
+
 // import { cache } from 'react'
 // import { clearChats, getChats } from '@/app/(chat)/actions'
 import { ClearHistory } from '@/components/chat/clear-history'
@@ -7,6 +9,7 @@ import { Session } from '@/lib/types'
 import { cn } from "@/lib/utils"
 import { logout } from '@/app/(chat)/actions'
 import { IconUser } from '@/components/ui/icons'
+import { useProfileStore } from '@/lib/store'
 
 interface SidebarListProps {
   children?: React.ReactNode,
@@ -14,7 +17,12 @@ interface SidebarListProps {
   chats: any
 }
 
-export async function SidebarList({ session, chats }: SidebarListProps) {
+export function SidebarList({ session, chats }: SidebarListProps) {
+  const { isUpdatingProfile, setIsUpdatingProfile } = useProfileStore();
+
+  const onClickUserProfile = () => {
+    setIsUpdatingProfile(true);
+  }
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -33,12 +41,15 @@ export async function SidebarList({ session, chats }: SidebarListProps) {
 
       <div className='relative'>
         <div className='p-4 inline-flex justify-between gap-2 w-full rounded-none'>
-          <div className="flex gap-2">
-            <div className='shrink-0 text-white size-6 rounded-sm'>
+          <button
+            className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out text-white hover:text-gray-500 lg:text-base text-secondary"
+            onClick={onClickUserProfile}
+          >
+            <div className='shrink-0 size-6 rounded-sm'>
               <IconUser />
             </div>
-            <span className='truncate max-w-[100px] sm:max-w-lg text-white'>{session?.user?.name}</span>
-          </div>
+            <span>{session?.user?.name}</span>
+          </button>
           <form action={logout}>
             <button
               className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-gray-500 lg:text-base text-secondary"

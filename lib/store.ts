@@ -58,4 +58,16 @@ interface PromptPanelState {
   setOnUsePromptHandler: (hadler: any) => void;
 }
 
+export const useProfileStore = create<ProfileState>((set) => ({
+  isUpdatingProfile: false,
+
+  setIsUpdatingProfile: (flag: boolean) => set({ isUpdatingProfile: flag })
+}));
+
+interface ProfileState {
+  isUpdatingProfile: boolean;
+
+  setIsUpdatingProfile: (flag: boolean) => void;
+}
+
 export default useStore;
