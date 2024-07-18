@@ -186,8 +186,9 @@ export async function updateUser(
     salt?: string
     status?: string
     expireDate?: Date
-    creditLimit?: Number,
+    creditLimit?: Number
     creditUsage?: Number
+    role?: Number
   }
 ) {
   try {

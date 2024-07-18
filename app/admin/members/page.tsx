@@ -1,4 +1,4 @@
-    "use client";
+"use client";
 
 import { useEffect, useRef, useState } from 'react';
 
@@ -29,6 +29,8 @@ import { userInfo } from 'os';
 import Papa from 'papaparse'
 import { sentInviteEmail } from '@/actions/mail';
 import { sampleUsers } from '@/lib/constants';
+
+const { SUPER_ADMIN } = process.env;
 
 const csv_headers = [
     'Email', 'Title', 'Firstname', 'Lastname', 'Gender', 'Date of Birth', 'Company', 'Department',
@@ -152,6 +154,23 @@ const Index = () => {
             if(res?.success) {
                 setUpdateFlag((flag) => !flag);
                 toast.success("Successfully enabled the user");
+            }
+            else {
+                toast.error(res?.message);
+            }
+        }
+        catch (err: any) {
+            toast.error(err.message);
+        }
+    }
+
+    const changeRole = async (userId: string, userRole: Number) => {
+        try {
+            const res = await updateUser(userId, { role: userRole === 1 ? 0 : 1 });
+            
+            if(res?.success) {
+                setUpdateFlag((flag) => !flag);
+                toast.success("Successfully updated user role");
             }
             else {
                 toast.error(res?.message);
@@ -289,7 +308,8 @@ const Index = () => {
                             hashedPassword,
                             salt,
                             expireDate,
-                            creditLimit
+                            creditLimit,
+                            0
                         );
                         if (result.type == 'success') {
                             count ++;
@@ -492,6 +512,15 @@ const Index = () => {
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent>
                                                         <DropdownMenuItem className="flex-col items-start">
+                                                            <button disabled={user.email === "hello@impactmind.ai"} onClick={() => {
+                                                                changeRole(user._id, user.role);
+                                                            }} className="text-gray-700 space-x-2 flex w-full items-center justify-start px-4 py-2 text-sm whitespace-nowrap disabled:cursor-default disabled:opacity-50"
+                                                            >
+                                                                <IconInvite />
+                                                                <span>{user.role === 0 ? "Make Member" : "Make Admin"}</span>
+                                                            </button>
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem className="flex-col items-start">
                                                             <button disabled={user?.role === 0 || user.status === 'disabled'} onClick={() => {
                                                                 inviteUser(user);
                                                             }} className="text-gray-700 space-x-2 flex w-full items-center justify-start px-4 py-2 text-sm whitespace-nowrap disabled:cursor-default disabled:opacity-50"
@@ -510,7 +539,7 @@ const Index = () => {
                                                             </button>
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem className="flex-col items-start">
-                                                            <button onClick={() => {
+                                                            <button disabled={user.email === "hello@impactmind.ai"} onClick={() => {
                                                                 setUserOnUpdating(user);
                                                                 setPageState(2);
                                                             }} className="text-gray-700 space-x-2 flex w-full items-center justify-start px-[18px] py-2 text-sm whitespace-nowrap disabled:cursor-default disabled:opacity-50"
