@@ -62,7 +62,8 @@ export async function createUser(
   hashedPassword: string,
   salt: string,
   expireDate: Date | undefined,
-  creditLimit: Number | undefined
+  creditLimit: Number | undefined,
+  creditUsage: Number | undefined
 ) {
   try {
     await dbConnect()
@@ -99,7 +100,7 @@ export async function createUser(
         status: 'created',
         expireDate,
         creditLimit,
-        creditUsage: 0
+        creditUsage: creditUsage || 0
       })
 
       await new_user.save()
@@ -185,7 +186,8 @@ export async function updateUser(
     salt?: string
     status?: string
     expireDate?: Date
-    creditLimit?: Number
+    creditLimit?: Number,
+    creditUsage?: Number
   }
 ) {
   try {

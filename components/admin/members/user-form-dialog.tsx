@@ -55,6 +55,7 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
     const [lineId, setLineId] = useState('');
     const [expireDate, setExpireDate] = useState<any>();
     const [creditLimit, setCreditLimit] = useState('');
+    const [creditUsage, setCreditUsage] = useState('');
 
     const [isOnRunning, setIsOnRunning] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
@@ -90,6 +91,9 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
             setMobileNumber(user.mobileNumber);
             setLineId(user.lineId);
             setGroupId(user.groupId);
+            setExpireDate(user.expireDate);
+            setCreditLimit(user.creditLimit?.toString());
+            setCreditUsage(user.creditUsage?.toString());
         }
 
         // Get Groups
@@ -157,13 +161,14 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
                     hashedPassword,
                     salt,
                     expire,
-                    credit
+                    credit,
+                    parseInt(creditUsage)
                 );
 
                 if (result.resultCode !== ResultCode.UserCreated) throw new Error();
 
-                setUpdateFlag((flag: any) => !flag);
                 setPageState(0);
+                setUpdateFlag((flag: any) => !flag);
 
                 toast.success('Successfully created the user');
 
@@ -178,7 +183,7 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
                 const userGroup = groups.find(group => group._id == groupId);
                 if (userGroup) {
                     credit = userGroup.creditLimit;
-                    expire = userGroup.expireDate
+                    expire = userGroup.expireDate;
                 }
                 credit = parseInt(creditLimit) || credit;
                 expire = expireDate || expire;
@@ -205,7 +210,8 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
                     groupId: groupId,
                     password: password || undefined,
                     expireDate: expire,
-                    creditLimit: credit
+                    creditLimit: credit || 0,
+                    creditUsage: parseInt(creditUsage) || 0
                 });
                 if (!res.success) {
                     setErrorMsg('Failed!');
@@ -278,15 +284,22 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
                                         className='flex items-center gap-1'
                                         onClick={() => setGender('male')}
                                     >
-                                        <Input type="radio" name={"genderRadioGroup"} checked={gender == 'male'} readOnly/>
+                                        <Input type="radio" name={"genderRadioGroup"} checked={gender?.toLowerCase() === 'male'} readOnly/>
                                         <label>Male</label>
                                     </div>
                                     <div
                                         className='flex items-center gap-1 hover:cursor-pointer'
                                         onClick={() => setGender('female')}
                                     >
-                                        <Input type="radio" name={"genderRadioGroup"} checked={gender == 'female'} readOnly/>
+                                        <Input type="radio" name={"genderRadioGroup"} checked={gender?.toLowerCase() === 'female'} readOnly/>
                                         <label>Female</label>
+                                    </div>
+                                    <div
+                                        className='flex items-center gap-1 hover:cursor-pointer whitespace-nowrap'
+                                        onClick={() => setGender('')}
+                                    >
+                                        <Input type="radio" name={"genderRadioGroup"} checked={gender?.toLowerCase() !== 'female' && gender?.toLowerCase() !== 'male'} readOnly/>
+                                        <label>Not specified</label>
                                     </div>
                                 </div>
                             </div>
@@ -361,10 +374,17 @@ export function UserFormDialog({ ...props }: UserFormDialogProps) {
                                     onChange={(date) => setExpireDate(date)}
                                 />
                             </div>
-                            <div className='-mt-2 mb-4'>
-                                <span>Monthly Credit: </span>
-                                <input type="text" placeholder="Enter credit limit" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
-                                    value={creditLimit} onChange={(e) => { setCreditLimit(e.currentTarget.value) }} />
+                            <div className='-mt-2 mb-4 flex flex-row gap-4'>
+                                <div className='flex-1'>
+                                    <span>Monthly Credit: </span>
+                                    <input type="text" placeholder="Enter credit limit" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
+                                        value={creditLimit} onChange={(e) => { setCreditLimit(e.currentTarget.value) }} />
+                                </div>
+                                <div className='flex-1'>
+                                    <span>Credit Usage: </span>
+                                    <input type="text" placeholder="Enter credit usage" className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 dark:bg-zinc-800"
+                                        value={creditUsage} onChange={(e) => { setCreditUsage(e.currentTarget.value) }} />
+                                </div>
                             </div>
                             <div className='-mt-2 mb-4 flex items-center gap-6'>
                                 <span>Group: </span>
