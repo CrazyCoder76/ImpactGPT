@@ -96,17 +96,19 @@ export function InviteFormDialog({ ...props }: InviteFormDialogProps) {
       setPending(true);
       const n = emails.length;
       for(let i = 0; i < n; i++) {
-          const user = await getUserByEmailLean(emails[i]);
+        if(!emails[i]) continue;
 
-          if (!user) {
-            const result = await createNewUser(emails[i]);
-            if (result) {
-              await inviteUser({ _id: result.id, email: emails[i]});
-            }
+        const user = await getUserByEmailLean(emails[i]);
+
+        if (!user) {
+          const result = await createNewUser(emails[i]);
+          if (result) {
+            await inviteUser({ _id: result.id, email: emails[i]});
           }
-          else {
-            await inviteUser(user);
-          }
+        }
+        else {
+          await inviteUser(user);
+        }
       }
 
       setUpdateFlag((prev: any) => !prev);
@@ -122,7 +124,7 @@ export function InviteFormDialog({ ...props }: InviteFormDialogProps) {
 
   return (
     <>
-      <Dialog {...props} onOpenChange={() => setPageState(0)}>
+      <Dialog {...props}>
         <DialogContent className="w-[400px]">
           <div>
             <div className="text-gray-800 text-left text-sm">

@@ -1,4 +1,4 @@
-    "use client";
+"use client";
 
 import { useEffect, useRef, useState } from 'react';
 
@@ -11,7 +11,7 @@ import {
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { UserFormDialog } from '@/components/admin/members/user-form-dialog';
-import { IconAdd, IconArrowLeft, IconEdit, IconRemove, IconThreeDots, IconUser, IconDisable, IconInvite, IconExport, IconImport, IconDownload } from "@/components/ui/icons";
+import { IconAdd, IconArrowLeft, IconEdit, IconRemove, IconThreeDots, IconUser, IconDisable, IconInvite, IconExport, IconImport, IconDownload, IconSpinner } from "@/components/ui/icons";
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import crypto from 'crypto'
@@ -30,6 +30,8 @@ import Papa from 'papaparse'
 import { sentInviteEmail } from '@/actions/mail';
 import { sampleUsers } from '@/lib/constants';
 
+const { SUPER_ADMIN } = process.env;
+
 const csv_headers = [
     'Email', 'Title', 'Firstname', 'Lastname', 'Gender', 'Date of Birth', 'Company', 'Department',
     'Team', 'Position', 'Rank', 'Location', 'Employee ID', 'Personal Info',
@@ -44,8 +46,10 @@ const Index = () => {
     const [pageState, setPageState] = useState(0);
     const [updateFlag, setUpdateFlag] = useState(false);
     const [userOnUpdating, setUserOnUpdating] = useState<User>();
-    const [file, setFile] = useState<File | null>(null)
-    const fileInputRef = useRef<HTMLInputElement>(null)
+    const [file, setFile] = useState<File | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isImporting, setIsImporting] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
 
     // current state 
     // 0: normal
@@ -91,10 +95,13 @@ const Index = () => {
             user.lineId,
             group_dict[user.groupId]
         ]);
+
     
         return [
             csv_headers.join(','),
-            ...csvRows.map(row => row.join(','))
+            ...csvRows.map(row => row.map(item => 
+                item == null ? '' : `"${item.replace(/"/g, '""')}"`
+            ).join(','))
         ].join('\n');
     };
     
@@ -114,7 +121,7 @@ const Index = () => {
             const res = await deleteUserById(userId);
             if(res?.success) {
                 setUpdateFlag((flag) => !flag);
-                toast.success("Successfully deleted the user");
+                toast.success("Successfully removed user");
             }
             else {
                 toast.error(res?.messsage);
@@ -157,6 +164,23 @@ const Index = () => {
         }
     }
 
+    const changeRole = async (userId: string, userRole: Number) => {
+        try {
+            const res = await updateUser(userId, { role: userRole === 1 ? 0 : 1 });
+            
+            if(res?.success) {
+                setUpdateFlag((flag) => !flag);
+                toast.success("Successfully updated user role");
+            }
+            else {
+                toast.error(res?.message);
+            }
+        }
+        catch (err: any) {
+            toast.error(err.message);
+        }
+    }
+
     const inviteUser = async (user: User) => {
         try {
             const emailSentResult = await sentInviteEmail({to: user.email});
@@ -180,27 +204,43 @@ const Index = () => {
     }
 
     const handleDownloadCSV = async () => {
-        const csvContent = convertToCSV(users);
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', 'users.csv');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        setIsExporting(true);
+        try {
+            const csvContent = convertToCSV(users);
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'users.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            toast.success("Successfully downloaded");
+        }
+        catch (err) {
+            toast.error("Something went wrong, please try again");
+        }
+        finally {
+            setIsExporting(false);
+        }
     };
 
     const handleDownloadSampleCSV = async () => {
-        const csvContent = loadSampleCSV(sampleUsers);
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', 'sample.csv');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        try {
+            const csvContent = loadSampleCSV(sampleUsers);
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'sample.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            toast.success("Successfully downloaded");
+        }
+        catch (err) {
+            toast.error("Something went wrong, please try again");
+        }
     }
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -215,10 +255,11 @@ const Index = () => {
     }
     
     const handleImportCSV = async (selectedFile: File) => {
-        if (!selectedFile) return
+        if (!selectedFile) return;
         const reader = new FileReader()
         reader.onload = async ({ target }) => {
             try {
+                setIsImporting(true);
                 const csv = Papa.parse(target?.result as string, { header: true });
                 const parsedData = csv?.data;
                 let count = 0;
@@ -267,7 +308,8 @@ const Index = () => {
                             hashedPassword,
                             salt,
                             expireDate,
-                            creditLimit
+                            creditLimit,
+                            0
                         );
                         if (result.type == 'success') {
                             count ++;
@@ -289,6 +331,8 @@ const Index = () => {
             }
             finally {
                 setUpdateFlag((flag) => !flag);
+        
+                setIsImporting(false);
             }
         }
 
@@ -328,12 +372,22 @@ const Index = () => {
                     </div>
                     <div className="hidden lg:flex items-center justify-start gap-2">
                         <button onClick={onHandleClickImportCSV} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-gray-400 gap-2" rel="noreferrer noopener">
-                            <IconImport />
-                            <span>Import Users</span>
+                        { isImporting
+                            ? <IconSpinner />
+                            : <>
+                                <IconImport />
+                                <span>Import Users</span>
+                              </>
+                        }
                         </button>
                         <button onClick={handleDownloadCSV} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:bg-gray-400 gap-2" rel="noreferrer noopener">
-                            <IconExport />
-                            <span>Export CSV</span>
+                        { isExporting
+                            ? <IconSpinner />
+                            : <>
+                                <IconExport />
+                                <span>Export CSV</span>
+                              </>
+                        }
                         </button>
                         <button onClick={handleDownloadSampleCSV} className="inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md shadow-sm text-blue-600 border-blue-600 hover:border-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 gap-2" rel="noreferrer noopener">
                             <IconDownload />
@@ -458,6 +512,15 @@ const Index = () => {
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent>
                                                         <DropdownMenuItem className="flex-col items-start">
+                                                            <button disabled={user.email === "hello@impactmind.ai"} onClick={() => {
+                                                                changeRole(user._id, user.role);
+                                                            }} className="text-gray-700 space-x-2 flex w-full items-center justify-start px-4 py-2 text-sm whitespace-nowrap disabled:cursor-default disabled:opacity-50"
+                                                            >
+                                                                <IconInvite />
+                                                                <span>{user.role === 0 ? "Make Member" : "Make Admin"}</span>
+                                                            </button>
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem className="flex-col items-start">
                                                             <button disabled={user?.role === 0 || user.status === 'disabled'} onClick={() => {
                                                                 inviteUser(user);
                                                             }} className="text-gray-700 space-x-2 flex w-full items-center justify-start px-4 py-2 text-sm whitespace-nowrap disabled:cursor-default disabled:opacity-50"
@@ -476,17 +539,17 @@ const Index = () => {
                                                             </button>
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem className="flex-col items-start">
-                                                            <button onClick={() => {
+                                                            <button disabled={user.email === "hello@impactmind.ai"} onClick={() => {
                                                                 setUserOnUpdating(user);
                                                                 setPageState(2);
-                                                            }} className="text-gray-700 space-x-2 flex w-full items-center justify-start px-4 py-2 text-sm whitespace-nowrap disabled:cursor-default disabled:opacity-50"
+                                                            }} className="text-gray-700 space-x-2 flex w-full items-center justify-start px-[18px] py-2 text-sm whitespace-nowrap disabled:cursor-default disabled:opacity-50"
                                                             >
                                                                 <IconEdit />
                                                                 <span>Edit</span>
                                                             </button>
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem className="flex-col items-start">
-                                                            <button disabled={user?.role === 0} onClick={() => { deleteUser(user._id); }} className="text-gray-700 space-x-2 flex w-full items-center justify-start px-3 py-2 text-sm whitespace-nowrap disabled:cursor-default disabled:opacity-50">
+                                                            <button disabled={user?.role === 0} onClick={() => { deleteUser(user._id); }} className="text-gray-700 space-x-2 flex w-full items-center justify-start px-4 py-2 text-sm whitespace-nowrap disabled:cursor-default disabled:opacity-50">
                                                                 <IconRemove />
                                                                 <span>Remove</span>
                                                             </button>
